@@ -1,5 +1,5 @@
 """
-Download FPL player data and per-gameweek history from the official API.
+Download FPL players, teams, positions and per-gameweek history from the official API.
 """
 
 import argparse
@@ -45,12 +45,19 @@ def get_json(session, endpoint):
     return response.json()
 
 
-def fetch_players(session):
+def fetch_bootstrap(session):
     """
-    Return a DataFrame with one row per player from the FPL API.
+    Download the main FPL overview.
     """
-    data = get_json(session, "bootstrap-static")
-    return pd.DataFrame(data["elements"])
+    return get_json(session, "bootstrap-static")
+
+
+def build_dataframe(data, section):
+    """
+    Return the given section of the overview (for example "elements",
+    "teams" or "element_types") as a DataFrame with one row per record.
+    """
+    return pd.DataFrame(data[section])
 
 
 def fetch_histories(session, player_ids):
@@ -91,18 +98,27 @@ def main(limit=None):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     session = make_session()
-    players = fetch_players(session)
+    data = fetch_bootstrap(session)
+
+    players = build_dataframe(data, "elements")
+    teams = build_dataframe(data, "teams")
+    positions = build_dataframe(data, "element_types")
+
     player_ids = players["id"].tolist()[:limit]
 
     history, failed = fetch_histories(session, player_ids)
 
     players.to_csv(OUT_DIR / "players.csv", index=False)
     history.to_csv(OUT_DIR / "gameweek_stats.csv", index=False)
+    teams.to_csv(OUT_DIR / "teams.csv", index=False)
+    positions.to_csv(OUT_DIR / "positions.csv", index=False)
 
     log.info("History shape: %s", history.shape)
     log.info("Players with history: %d", history["element"].nunique())
     if failed:
         log.warning("Failed player ids: %s", failed)
+    log.info("Teams shape: %s", teams.shape)
+    log.info("Positions shape: %s", positions.shape)
 
 
 if __name__ == "__main__":
