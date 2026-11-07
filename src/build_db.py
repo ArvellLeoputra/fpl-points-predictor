@@ -2,6 +2,7 @@
 Build the SQLite database from sql/schema.sql and the CSV files in data/raw/.
 """
 
+import pandas as pd
 import sqlite3
 from pathlib import Path
 
@@ -9,6 +10,9 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA_PATH = ROOT / "sql" / "schema.sql"
 DB_PATH = ROOT / "data" / "fpl.db"
 RAW_DIR = ROOT / "data" / "raw"
+
+# parents before children (foreign keys)
+TABLES = ["teams", "positions", "players", "gameweek_stats"]
 
 
 def create_database():
@@ -28,14 +32,35 @@ def create_database():
     return conn
 
 
+def load_table(conn, table):
+    """
+    Load data/raw/<table>.csv into the table.
+    """
+    cursor = conn.execute(f"PRAGMA table_info({table})")
+    columns = [row[1] for row in cursor.fetchall()]
+
+    df = pd.read_csv(RAW_DIR / f"{table}.csv")
+    df = df[columns]
+
+    df.to_sql(table, conn, if_exists="append", index=False)
+
+    conn.commit()
+    count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+    print(f"{table}: {count} rows")
+
+
 def main():
     """
     Create the database, load the CSV files and run basic checks.
     """
     conn = create_database()
-    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-    tables = [row[0] for row in cursor.fetchall()]
-    print(tables)
+
+    for table in TABLES:
+        load_table(conn, table)
+
+    problems = conn.execute("PRAGMA foreign_key_check").fetchall()
+    print("Foreign key problems:", problems)
+
     conn.close()
 
 
