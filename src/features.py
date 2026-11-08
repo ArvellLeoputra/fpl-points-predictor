@@ -3,26 +3,18 @@ Build the features for the points model from the SQLite database.
 """
 
 import sqlite3
-from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
-DB_PATH = ROOT / "data" / "fpl.db"
-
-FORM_WINDOW = 5         # matches in the rolling averages
-
-# Time split: train on earlier rounds, test on the latest full rounds
-TEST_START_ROUND = 8
-LAST_FULL_ROUND = 9     # round 10 is still partial (unfinished matches)
-
-FORM_SOURCES = {
-    "total_points": "avg_points_last",
-    "minutes": "avg_minutes_last",
-}
-
-# the baseline prediction is the rolling average of the points
-BASELINE_COLUMN = f"{FORM_SOURCES['total_points']}_{FORM_WINDOW}"
+from config import (
+    BASELINE_COLUMN,
+    DB_PATH,
+    FEATURE_COLUMNS,
+    FORM_SOURCES,
+    FORM_WINDOW,
+    LAST_FULL_ROUND,
+    TEST_START_ROUND,
+)
 
 
 def load_matches():
@@ -91,6 +83,17 @@ def baseline_mae(test):
     return mae_all, mae_played
 
 
+def make_xy(df):
+    """
+    Return the feature table X and the target y.
+    Rows without a rolling average (a player's first match) are dropped.
+    """
+    rows = df.dropna(subset=FEATURE_COLUMNS)
+    X = rows[FEATURE_COLUMNS]
+    y = rows["total_points"]
+    return X, y
+
+
 def main():
     """
     Load the matches, add the features and show a quick check.
@@ -105,6 +108,10 @@ def main():
     mae_all, mae_played = baseline_mae(test)
     print(f"Baseline MAE, all rows: {mae_all:.3f}")
     print(f"Baseline MAE, played only: {mae_played:.3f}")
+
+    X_train, y_train = make_xy(train)
+    X_test, y_test = make_xy(test)
+    print(X_train.shape, X_test.shape)
 
 
 if __name__ == "__main__":
