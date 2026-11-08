@@ -17,6 +17,7 @@ FROM (
             ROWS BETWEEN 5 PRECEDING AND 1 PRECEDING
         ) AS avg_last_5
     FROM gameweek_stats AS gs
+    WHERE gs.team_h_score IS NOT NULL  -- keeping only finished matches
 )
 WHERE avg_last_5 IS NOT NULL
     AND minutes > 0;
