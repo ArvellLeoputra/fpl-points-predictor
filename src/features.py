@@ -10,12 +10,19 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "fpl.db"
 
-FORM_WINDOW = 5
+FORM_WINDOW = 5         # matches in the rolling averages
+
+# Time split: train on earlier rounds, test on the latest full rounds
+TEST_START_ROUND = 8
+LAST_FULL_ROUND = 9     # round 10 is still partial (unfinished matches)
 
 FORM_SOURCES = {
     "total_points": "avg_points_last",
     "minutes": "avg_minutes_last",
 }
+
+# the baseline prediction is the rolling average of the points
+BASELINE_COLUMN = f"{FORM_SOURCES['total_points']}_{FORM_WINDOW}"
 
 
 def load_matches():
@@ -59,6 +66,31 @@ def add_form_features(df):
     return df
 
 
+def split_train_test(df):
+    """
+    Split by time: earlier rounds for training, the latest full rounds
+    for testing. Partial rounds after LAST_FULL_ROUND are dropped.
+    """
+    df = df[df["round"] <= LAST_FULL_ROUND]
+    train = df[df["round"] < TEST_START_ROUND].copy()
+    test = df[df["round"] >= TEST_START_ROUND].copy()
+    return train, test
+
+
+def baseline_mae(test):
+    """
+    Mean absolute error of the baseline prediction (average of the
+    previous FORM_WINDOW matches) on the test set.
+    Returns (all rows, played only).
+    """
+    rows = test.dropna(subset=[BASELINE_COLUMN])
+    error = (rows["total_points"] - rows[BASELINE_COLUMN]).abs()
+
+    mae_all = error.mean()
+    mae_played = error[rows["minutes"] > 0].mean()
+    return mae_all, mae_played
+
+
 def main():
     """
     Load the matches, add the features and show a quick check.
@@ -66,8 +98,13 @@ def main():
     df = load_matches()
     df = add_form_features(df)
     print(df.shape)
-    print(df[["element", "round", "total_points", "avg_points_last_5",
-              "minutes", "avg_minutes_last_5"]].head(6))
+
+    train, test = split_train_test(df)
+    print(f"Train: {len(train)} rows, test: {len(test)} rows")
+
+    mae_all, mae_played = baseline_mae(test)
+    print(f"Baseline MAE, all rows: {mae_all:.3f}")
+    print(f"Baseline MAE, played only: {mae_played:.3f}")
 
 
 if __name__ == "__main__":
