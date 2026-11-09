@@ -5,7 +5,7 @@
    Only players with at least 450 minutes (about 5 full matches),
    so a single lucky appearance cannot top the list. */
 
-SELECT 
+SELECT
    p.web_name,
    p.now_cost,  -- price in tenths of a million (54 = 5.4m)
    SUM(gs.total_points) AS season_points,

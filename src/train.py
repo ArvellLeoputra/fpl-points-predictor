@@ -5,7 +5,7 @@ Train the models and compare their test MAE with the baseline.
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import HistGradientBoostingRegressor
 
-from config import (BASELINE_COLUMN)
+from config import BASELINE_COLUMN
 from features import (
     add_form_features,
     load_matches,
@@ -38,7 +38,7 @@ def print_results(results):
 
 def main():
     """
-    Train linear regression and report the test MAE.
+    Train the models and compare their test MAE with the baseline.
     """
     df = load_matches()
     df = add_form_features(df)
@@ -61,7 +61,7 @@ def main():
         "trees (median)": HistGradientBoostingRegressor(loss="absolute_error"),
         "trees (mean)": HistGradientBoostingRegressor(loss="squared_error")
     }
-    
+
     for name, model in models.items():
         model.fit(X_train, y_train)
         results[name] = mae_by_group(y_test, model.predict(X_test), played)
