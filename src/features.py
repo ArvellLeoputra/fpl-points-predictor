@@ -85,7 +85,7 @@ def baseline_mae(test):
 
 def make_xy(df):
     """
-    Return the feature table X and the target y.
+    Return the feature table X (FEATURE_COLUMNS) and the target y (total_points).
     Rows without a rolling average (a player's first match) are dropped.
     """
     rows = df.dropna(subset=FEATURE_COLUMNS)
