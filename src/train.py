@@ -8,6 +8,7 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from config import BASELINE_COLUMN
 from features import (
     add_form_features,
+    add_position_features,
     load_matches,
     make_xy,
     split_train_test,
@@ -42,6 +43,7 @@ def main():
     """
     df = load_matches()
     df = add_form_features(df)
+    df = add_position_features(df)
 
     # Split the data into train and test sets
     train, test = split_train_test(df)
@@ -55,7 +57,7 @@ def main():
 
     results = {"baseline": mae_by_group(y_test, X_test[BASELINE_COLUMN], played)}
 
-    # Train the data on a linear regression model and a boosted tree model
+    # Train a linear model and two boosted-tree models
     models = {
         "linear": LinearRegression(),
         "trees (median)": HistGradientBoostingRegressor(loss="absolute_error"),

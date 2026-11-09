@@ -24,10 +24,16 @@ def load_matches():
     """
     conn = sqlite3.connect(DB_PATH)
     query = """
-        SELECT *
-        FROM gameweek_stats
-        WHERE team_h_score IS NOT NULL
-        ORDER BY element, kickoff_time;
+        SELECT gs.*,
+               p.element_type AS position,
+               CASE WHEN gs.was_home = 1 THEN t.strength_overall_away
+                    ELSE t.strength_overall_home
+               END AS opponent_strength
+        FROM gameweek_stats AS gs
+        JOIN players AS p ON p.id = gs.element
+        JOIN teams AS t ON t.id = gs.opponent_team
+        WHERE gs.team_h_score IS NOT NULL
+        ORDER BY gs.element, gs.kickoff_time;
     """
     df = pd.read_sql(query, conn)
     conn.close()
@@ -55,6 +61,15 @@ def add_form_features(df):
         df[f"{prefix}_{FORM_WINDOW}"] = by_player[source].transform(
             average_of_previous_x, FORM_WINDOW
         )
+    return df
+
+
+def add_position_features(df):
+    """
+    Add one 0/1 column per position (goalkeeper is the reference).
+    """
+    dummies = pd.get_dummies(df["position"], prefix="position", drop_first=True, dtype=int)
+    df = pd.concat([df, dummies], axis=1)
     return df
 
 
@@ -100,6 +115,7 @@ def main():
     """
     df = load_matches()
     df = add_form_features(df)
+    df = add_position_features(df)
     print(df.shape)
 
     train, test = split_train_test(df)

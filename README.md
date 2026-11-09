@@ -9,9 +9,9 @@ Test set: gameweeks 8 and 9 of the 2026/27 season (1,337 player-matches). Models
 | Method | All rows | Played only | Not played |
 |---|---|---|---|
 | Baseline: average of last 5 matches | 1.185 | 2.097 | 0.413 |
-| Linear regression | 1.185 | **1.914** | 0.567 |
-| Gradient-boosted trees (median) | **1.108** | 2.103 | **0.265** |
-| Gradient-boosted trees (mean) | 1.261 | 2.076 | 0.571 |
+| Linear regression | 1.194 | **1.903** | 0.595 |
+| Gradient-boosted trees (median) | **1.094** | 2.101 | **0.241** |
+| Gradient-boosted trees (mean) | 1.233 | 2.044 | 0.546 |
 
 Median / mean: the trees are trained to minimize the absolute error (median) or the squared error (mean). MAE = average number of points the prediction is off.
 
@@ -21,7 +21,7 @@ Columns: *All rows* is every player-match in the test set. *Played only* is the 
 
 - Minutes and price explain more than recent form. In the linear model, going from 0 to 90 average minutes adds about 2.8 predicted points, while a player whose average is 6 points higher gets only about 0.6 more.
 - A straight formula cannot predict exactly 0 for players who do not play. Linear regression beats the baseline on players who played (1.914 vs 2.097), but is worse on players who did not play (0.567 vs 0.413). The trees can predict about 0 for players who are not expected to play, and they are the best on those rows (0.265 vs 0.413).
-- On players who played, the best model (linear regression, 1.914) improves the baseline by only 0.18 points. Position and opponent strength are the next features.
+- On players who played, the best model (linear regression, 1.903) improves the baseline by only 0.19 points. Adding position and opponent strength changed the results by about 0.01 to 0.02, which is within the noise of a two-gameweek test set. Position adds little once price and minutes are known, because price already reflects the position. A stronger opponent lowers the predicted points by about 0.2 per rating step.
 - Trees trained for the mean have a higher MAE than trees trained for the median (1.261 vs 1.108). The mean is the expected number of points, which a squad optimizer needs, so MAE is not the right measure for this version.
 
 Only 9 gameweeks of one season are available so far, the test set is two gameweeks, and the models are not tuned yet, so these results are preliminary.
@@ -36,7 +36,7 @@ Only 9 gameweeks of one season are available so far, the test set is two gamewee
    sqlite3 data/fpl.db < sql/value_for_money.sql
    ```
 
-4. **Features** (`src/features.py`): rolling averages of points and minutes over the previous 5 matches, home or away, and price.
+4. **Features** (`src/features.py`): rolling averages of points and minutes over the previous 5 matches, position, home or away, opponent strength, and price.
 5. **Models** (`src/train.py`): linear regression and gradient-boosted trees, compared with the baseline.
 
 Design choices:
@@ -93,7 +93,6 @@ sql/
 
 ## Next steps
 
-- Position and opponent strength features
 - A minutes model: will the player start?
 - More seasons of data
 - Squad optimizer (mixed-integer program) and a backtest
