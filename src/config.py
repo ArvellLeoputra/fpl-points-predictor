@@ -17,6 +17,7 @@ LAST_FULL_ROUND = 9     # round 10 is still partial (unfinished matches)
 FORM_SOURCES = {
     "total_points": "avg_points_last",
     "minutes": "avg_minutes_last",
+    "starts": "avg_starts_last",
 }
 
 # One 0/1 column per position (goalkeeper is the reference)

@@ -1,6 +1,6 @@
 # FPL Points Predictor
 
-The goal is to predict Fantasy Premier League (FPL) player points for the next match. So far, the project builds a SQLite database from the official FPL API, explores it with SQL, and compares machine learning models with a simple baseline on past gameweeks.
+The goal is to predict Fantasy Premier League (FPL) player points for the next match. So far, the project builds a SQLite database from the official FPL API, explores it with SQL, and compares machine learning models, including a two-part model, with a simple baseline on past gameweeks.
 
 ## Results
 
@@ -9,20 +9,32 @@ Test set: gameweeks 8 and 9 of the 2026/27 season (1,337 player-matches). Models
 | Method | All rows | Played only | Not played |
 |---|---|---|---|
 | Baseline: average of last 5 matches | 1.185 | 2.097 | 0.413 |
-| Linear regression | 1.194 | **1.903** | 0.595 |
-| Gradient-boosted trees (median) | **1.094** | 2.101 | **0.241** |
-| Gradient-boosted trees (mean) | 1.233 | 2.044 | 0.546 |
+| Linear regression | 1.185 | **1.894** | 0.584 |
+| Gradient-boosted trees (median) | **1.081** | 2.074 | **0.240** |
+| Gradient-boosted trees (mean) | 1.237 | 2.062 | 0.539 |
 
 Median / mean: the trees are trained to minimize the absolute error (median) or the squared error (mean). MAE = average number of points the prediction is off.
 
 Columns: *All rows* is every player-match in the test set. *Played only* is the rows where the player had at least one minute. *Not played* is the rows where he had 0 minutes.
 
+### Two-part model
+
+Expected points = probability that the player plays × expected points if he plays (both gradient-boosted trees). Since it predicts the mean, it is judged by RMSE (root mean squared error) and not by MAE.
+
+| Method | RMSE |
+|---|---|
+| Baseline: average of last 5 matches | 2.142 |
+| Single gradient-boosted trees (mean) | 2.157 |
+| Two-part model | 2.145 |
+
+The three are within 0.02 of each other, which is within the noise of a two-gameweek test set. With 7 gameweeks of training data, none of the models beats the baseline on RMSE. The model for "does the player play?" is right on 82.6% of the rows (a simple rule, "had minutes recently", gets 81.2%).
+
 ## Short takeaways
 
-- Minutes and price explain more than recent form. In the linear model, going from 0 to 90 average minutes adds about 2.8 predicted points, while a player whose average is 6 points higher gets only about 0.6 more.
-- A straight formula cannot predict exactly 0 for players who do not play. Linear regression beats the baseline on players who played (1.914 vs 2.097), but is worse on players who did not play (0.567 vs 0.413). The trees can predict about 0 for players who are not expected to play, and they are the best on those rows (0.265 vs 0.413).
-- On players who played, the best model (linear regression, 1.903) improves the baseline by only 0.19 points. Adding position and opponent strength changed the results by about 0.01 to 0.02, which is within the noise of a two-gameweek test set. Position adds little once price and minutes are known, because price already reflects the position. A stronger opponent lowers the predicted points by about 0.2 per rating step.
-- Trees trained for the mean have a higher MAE than trees trained for the median (1.261 vs 1.108). The mean is the expected number of points, which a squad optimizer needs, so MAE is not the right measure for this version.
+- Minutes and price explain more than recent form. In the linear model, going from 0 to 90 average minutes adds about 2.7 predicted points, while a player whose average is 6 points higher gets only about 0.6 more.
+- A straight formula cannot predict exactly 0 for players who do not play. Linear regression beats the baseline on players who played (1.894 vs 2.097), but is worse on players who did not play (0.584 vs 0.413). The trees can predict about 0 for players who are not expected to play, and they are the best on those rows (0.240 vs 0.413).
+- On players who played, the best model (linear regression, 1.894) improves the baseline by only 0.20 points. Adding position and opponent strength changed the results by about 0.01 to 0.02, which is within the noise of a two-gameweek test set. Position adds little once price and minutes are known, because price already reflects the position. A stronger opponent lowers the predicted points by about 0.2 per rating step.
+- Trees trained for the mean have a higher MAE than trees trained for the median (1.237 vs 1.081). The mean is the expected number of points, which a squad optimizer needs, so these models are judged by RMSE instead (see the two-part model).
 
 Only 9 gameweeks of one season are available so far, the test set is two gameweeks, and the models are not tuned yet, so these results are preliminary.
 
@@ -36,8 +48,9 @@ Only 9 gameweeks of one season are available so far, the test set is two gamewee
    sqlite3 data/fpl.db < sql/value_for_money.sql
    ```
 
-4. **Features** (`src/features.py`): rolling averages of points and minutes over the previous 5 matches, position, home or away, opponent strength, and price.
+4. **Features** (`src/features.py`): rolling averages of points, minutes and starts over the previous 5 matches, position, home or away, opponent strength, and price.
 5. **Models** (`src/train.py`): linear regression and gradient-boosted trees, compared with the baseline.
+6. **Two-part model** (`src/two_part_model.py`): probability that the player plays times expected points if he plays. The "does he play?" model is checked on its own in `src/minutes_model.py`.
 
 Design choices:
 
@@ -62,6 +75,7 @@ Run from the repository root:
 python src/download_gameweeks.py   # download raw data into data/raw/
 python src/build_db.py             # build data/fpl.db
 python src/train.py                # train models and print the results table
+python src/two_part_model.py       # two-part model, compared by RMSE
 ```
 
 Quick test with only 5 players:
@@ -84,6 +98,8 @@ src/
   config.py               paths, time split, feature settings
   features.py             features, train/test split
   train.py                models and comparison with the baseline
+  minutes_model.py        does the player play? rule vs classifier
+  two_part_model.py       P(plays) x points if he plays, judged by RMSE
 sql/
   schema.sql              table definitions
   value_for_money.sql     points per million
@@ -93,8 +109,8 @@ sql/
 
 ## Next steps
 
-- A minutes model: will the player start?
-- More seasons of data
+- More seasons of data (the test set is too small to tell the models apart)
+- Better information about who plays (injuries, rotation)
 - Squad optimizer (mixed-integer program) and a backtest
 - Automated weekly refresh
 
