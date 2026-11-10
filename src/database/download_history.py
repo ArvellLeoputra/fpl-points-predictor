@@ -7,10 +7,9 @@ from pathlib import Path
 
 import requests
 
-from src.config import ROOT
+from src.config import ROOT, PAST_SEASONS
 
 BASE_URL = "https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data"
-SEASONS = ["2022-23", "2023-24", "2024-25", "2025-26"]
 FILES = ["gws/merged_gw.csv", "players_raw.csv", "teams.csv"]
 OUT_DIR = ROOT / "data" / "raw" / "history"
 TIMEOUT = 30
@@ -38,7 +37,7 @@ def main():
         format="%(asctime)s %(message)s",
         datefmt="%H:%M:%S",
     )
-    for season in SEASONS:
+    for season in PAST_SEASONS:
         for file in FILES:
             download_file(season, file)
 

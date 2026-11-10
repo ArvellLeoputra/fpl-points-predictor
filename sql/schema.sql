@@ -1,5 +1,6 @@
 CREATE TABLE teams(
-    id                    INTEGER PRIMARY KEY,
+    season                TEXT NOT NULL,
+    id                    INTEGER NOT NULL,
     code                  INTEGER,
     name                  TEXT NOT NULL,
     short_name            TEXT NOT NULL,
@@ -9,7 +10,8 @@ CREATE TABLE teams(
     strength_attack_home  INTEGER,
     strength_attack_away  INTEGER,
     strength_defence_home INTEGER,
-    strength_defence_away INTEGER
+    strength_defence_away INTEGER,
+    PRIMARY KEY (season, id)
 );
 
 CREATE TABLE positions(
@@ -24,7 +26,8 @@ CREATE TABLE positions(
 );
 
 CREATE TABLE players(
-    id                                      INTEGER PRIMARY KEY,
+    season                                  TEXT NOT NULL,
+    id                                      INTEGER NOT NULL,
     web_name                                TEXT NOT NULL,
     first_name                              TEXT NOT NULL,
     second_name                             TEXT NOT NULL,
@@ -41,11 +44,13 @@ CREATE TABLE players(
     code                                    INTEGER,
     opta_code                               TEXT,
     ep_next                                 REAL,
-    FOREIGN KEY (team) REFERENCES teams(id),
+    PRIMARY KEY (season, id),
+    FOREIGN KEY (season, team) REFERENCES teams(season, id),
     FOREIGN KEY (element_type) REFERENCES positions(id)
 );
 
 CREATE TABLE gameweek_stats(
+    season                                  TEXT NOT NULL,
     element                                 INTEGER NOT NULL,
     fixture                                 INTEGER NOT NULL,
     opponent_team                           INTEGER NOT NULL,
@@ -85,7 +90,7 @@ CREATE TABLE gameweek_stats(
     selected                                INTEGER,
     transfers_in                            INTEGER,
     transfers_out                           INTEGER,
-    PRIMARY KEY (element, fixture),
-    FOREIGN KEY (element) REFERENCES players(id),
-    FOREIGN KEY (opponent_team) REFERENCES teams(id)
+    PRIMARY KEY (season, element, fixture),
+    FOREIGN KEY (season, element) REFERENCES players(season, id),
+    FOREIGN KEY (season, opponent_team) REFERENCES teams(season, id)
 );

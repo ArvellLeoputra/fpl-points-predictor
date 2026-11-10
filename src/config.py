@@ -7,6 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "data" / "fpl.db"
 
+# Seasons
+CURRENT_SEASON = "2026-27"
+PAST_SEASONS = ["2022-23", "2023-24", "2024-25", "2025-26"]
+
 FORM_WINDOW = 5         # matches in the rolling averages
 
 # Time split: train on earlier rounds, test on the latest full rounds
