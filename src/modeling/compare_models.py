@@ -42,8 +42,8 @@ def main():
     # Train a linear model and two boosted-tree models
     regressors = {
         "linear": LinearRegression(),
-        "trees (median)": HistGradientBoostingRegressor(loss="absolute_error"),
-        "trees (mean)": HistGradientBoostingRegressor(loss="squared_error"),
+        "trees (median)": HistGradientBoostingRegressor(loss="absolute_error", random_state=0),
+        "trees (mean)": HistGradientBoostingRegressor(loss="squared_error", random_state=0),
     }
 
     for name, model in regressors.items():

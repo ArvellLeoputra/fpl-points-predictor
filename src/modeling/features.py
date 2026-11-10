@@ -11,8 +11,7 @@ from src.config import (
     FEATURE_COLUMNS,
     FORM_SOURCES,
     FORM_WINDOW,
-    LAST_FULL_ROUND,
-    TEST_START_ROUND,
+    TEST_SEASON,
 )
 
 
@@ -24,15 +23,16 @@ def load_matches():
     conn = sqlite3.connect(DB_PATH)
     query = """
         SELECT gs.*,
+               p.code,
                p.element_type AS position,
                CASE WHEN gs.was_home = 1 THEN t.strength_overall_away
                     ELSE t.strength_overall_home
                END AS opponent_strength
         FROM gameweek_stats AS gs
-        JOIN players AS p ON p.id = gs.element
-        JOIN teams AS t ON t.id = gs.opponent_team
+        JOIN players AS p ON p.season = gs.season AND p.id = gs.element
+        JOIN teams AS t ON t.season = gs.season AND t.id = gs.opponent_team
         WHERE gs.team_h_score IS NOT NULL
-        ORDER BY gs.element, gs.kickoff_time;
+        ORDER BY p.code, gs.kickoff_time;
     """
     df = pd.read_sql(query, conn)
     conn.close()
@@ -55,7 +55,7 @@ def add_form_features(df):
     player's previous FORM_WINDOW matches (current match excluded).
     `df` must be sorted by player and kickoff time.
     """
-    by_player = df.groupby("element")
+    by_player = df.groupby("code")
     for source, prefix in FORM_SOURCES.items():
         df[f"{prefix}_{FORM_WINDOW}"] = by_player[source].transform(
             average_of_previous_x, FORM_WINDOW
@@ -72,24 +72,36 @@ def add_position_features(df):
     return df
 
 
+def scale_opponent_strength(df):
+    """
+    Put opponent_strength on the same scale in every season, from 0 (weakest
+    opponent of the season) to 1 (strongest).
+    """
+    by_season = df.groupby("season")["opponent_strength"]
+    low = by_season.transform("min")
+    high = by_season.transform("max")
+    df["opponent_strength"] = (df["opponent_strength"] - low) / (high - low)
+    return df
+
+
 def load_dataset():
     """
-    Load all matches with the form and position features added.
+    Load all matches with the form and position features added, and the opponent strength scaled.
     """
     df = load_matches()
     df = add_form_features(df)
     df = add_position_features(df)
+    df = scale_opponent_strength(df)
     return df
 
 
 def split_train_test(df):
     """
-    Split by time: earlier rounds for training, the latest full rounds
-    for testing. Partial rounds after LAST_FULL_ROUND are dropped.
+    Split by time: the seasons before TEST_SEASON for training,
+    TEST_SEASON for testing. Later seasons are dropped.
     """
-    df = df[df["round"] <= LAST_FULL_ROUND]
-    train = df[df["round"] < TEST_START_ROUND].copy()
-    test = df[df["round"] >= TEST_START_ROUND].copy()
+    train = df[df["season"] < TEST_SEASON].copy()
+    test = df[df["season"] == TEST_SEASON].copy()
     return train, test
 
 

@@ -13,9 +13,8 @@ PAST_SEASONS = ["2022-23", "2023-24", "2024-25", "2025-26"]
 
 FORM_WINDOW = 5         # matches in the rolling averages
 
-# Time split: train on earlier rounds, test on the latest full rounds
-TEST_START_ROUND = 8
-LAST_FULL_ROUND = 9     # round 10 is still partial (unfinished matches)
+# Time split: train on the seasons before the test season
+TEST_SEASON = "2025-26"
 
 # Form related features
 FORM_SOURCES = {
