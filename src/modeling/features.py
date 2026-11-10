@@ -51,11 +51,11 @@ def average_of_previous_x(values, x):
 
 def add_form_features(df):
     """
-    Add rolling form features: for each source column, the average of the
-    player's previous FORM_WINDOW matches (current match excluded).
+    Add rolling form features: the average of the player's previous
+    FORM_WINDOW matches in the same season (current match excluded).
     `df` must be sorted by player and kickoff time.
     """
-    by_player = df.groupby("code")
+    by_player = df.groupby(["code", "season"])
     for source, prefix in FORM_SOURCES.items():
         df[f"{prefix}_{FORM_WINDOW}"] = by_player[source].transform(
             average_of_previous_x, FORM_WINDOW

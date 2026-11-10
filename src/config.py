@@ -28,8 +28,8 @@ POSITION_COLUMNS = ["position_2", "position_3", "position_4"]
 
 FORM_COLUMNS = [f"{prefix}_{FORM_WINDOW}" for prefix in FORM_SOURCES.values()]
 
-# The features used for training. opponent_strength is FPL's rating (2 to 5)
-# of the opponent, for the home or away side it plays in this match.
+# The features used for training. opponent_strength is FPL's rating of the opponent
+# (for the home or away side it plays), scaled from 0 to 1 within each season.
 FEATURE_COLUMNS = FORM_COLUMNS + POSITION_COLUMNS + ["was_home", "value", "opponent_strength"]
 
 # The baseline prediction is the rolling average of the points

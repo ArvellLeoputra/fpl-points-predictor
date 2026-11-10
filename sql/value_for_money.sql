@@ -11,7 +11,8 @@ SELECT
    SUM(gs.total_points) AS season_points,
    ROUND(SUM(gs.total_points) / (p.now_cost / 10.0), 2) AS points_per_million
 FROM gameweek_stats AS gs
-JOIN players AS p ON p.id = gs.element
+JOIN players AS p ON p.season = gs.season AND p.id = gs.element
+WHERE gs.season = '2026-27'
 GROUP BY p.id
 HAVING SUM(gs.minutes) >= 450
 ORDER BY points_per_million DESC
