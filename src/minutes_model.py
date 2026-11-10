@@ -2,33 +2,19 @@
 Predict whether a player plays (at least one minute) in the next match.
 """
 
-from sklearn.ensemble import HistGradientBoostingClassifier
-
 from features import (
-    add_form_features,
-    add_position_features,
-    load_matches,
+    load_dataset,
     make_xy,
     split_train_test,
 )
-
-
-def train_play_model(X_train, played_train):
-    """
-    Train a model for the probability that a player plays.
-    """
-    model = HistGradientBoostingClassifier()
-    model.fit(X_train, played_train)
-    return model
+from models import train_play_model
 
 
 def main():
     """
     Compare a simple rule with a classifier for 'does the player play?'
     """
-    df = load_matches()
-    df = add_form_features(df)
-    df = add_position_features(df)
+    df = load_dataset()
 
     train, test = split_train_test(df)
     X_train, y_train = make_xy(train)
@@ -53,6 +39,7 @@ def main():
     print(f"  rule says plays:            {rule_predictions.mean():.3f}")
     print(f"  classifier says plays:      {play_predictions.mean():.3f}")
     print(f"  classifier avg probability: {play_probabilities.mean():.3f}")
+    print()
     print("Accuracy of 'does the player play?':")
     print(f"  rule (last 5 gameweeks):    {rule_accuracy:.3f}")
     print(f"  classifier (all features):  {model_accuracy:.3f}")

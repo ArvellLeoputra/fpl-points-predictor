@@ -7,7 +7,6 @@ import sqlite3
 import pandas as pd
 
 from config import (
-    BASELINE_COLUMN,
     DB_PATH,
     FEATURE_COLUMNS,
     FORM_SOURCES,
@@ -73,6 +72,16 @@ def add_position_features(df):
     return df
 
 
+def load_dataset():
+    """
+    Load all matches with the form and position features added.
+    """
+    df = load_matches()
+    df = add_form_features(df)
+    df = add_position_features(df)
+    return df
+
+
 def split_train_test(df):
     """
     Split by time: earlier rounds for training, the latest full rounds
@@ -82,20 +91,6 @@ def split_train_test(df):
     train = df[df["round"] < TEST_START_ROUND].copy()
     test = df[df["round"] >= TEST_START_ROUND].copy()
     return train, test
-
-
-def baseline_mae(test):
-    """
-    Mean absolute error of the baseline prediction (average of the
-    previous FORM_WINDOW matches) on the test set.
-    Returns (all rows, played only).
-    """
-    rows = test.dropna(subset=[BASELINE_COLUMN])
-    error = (rows["total_points"] - rows[BASELINE_COLUMN]).abs()
-
-    mae_all = error.mean()
-    mae_played = error[rows["minutes"] > 0].mean()
-    return mae_all, mae_played
 
 
 def make_xy(df):
@@ -113,17 +108,11 @@ def main():
     """
     Load the matches, add the features and show a quick check.
     """
-    df = load_matches()
-    df = add_form_features(df)
-    df = add_position_features(df)
+    df = load_dataset()
     print(df.shape)
 
     train, test = split_train_test(df)
     print(f"Train: {len(train)} rows, test: {len(test)} rows")
-
-    mae_all, mae_played = baseline_mae(test)
-    print(f"Baseline MAE, all rows: {mae_all:.3f}")
-    print(f"Baseline MAE, played only: {mae_played:.3f}")
 
     X_train, y_train = make_xy(train)
     X_test, y_test = make_xy(test)
