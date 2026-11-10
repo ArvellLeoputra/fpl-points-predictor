@@ -2,12 +2,12 @@
 Predict whether a player plays (at least one minute) in the next match.
 """
 
-from features import (
+from src.modeling.features import (
     load_dataset,
     make_xy,
     split_train_test,
 )
-from models import train_play_model
+from src.modeling.models import train_play_model
 
 
 def main():

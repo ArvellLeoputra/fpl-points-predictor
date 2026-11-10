@@ -6,7 +6,8 @@ import pandas as pd
 import sqlite3
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+from src.config import ROOT
+
 SCHEMA_PATH = ROOT / "sql" / "schema.sql"
 DB_PATH = ROOT / "data" / "fpl.db"
 RAW_DIR = ROOT / "data" / "raw"

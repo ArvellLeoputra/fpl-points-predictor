@@ -7,7 +7,7 @@ from sklearn.ensemble import (
     HistGradientBoostingRegressor,
 )
 
-from config import BASELINE_COLUMN
+from src.config import BASELINE_COLUMN
 
 
 def baseline_predictions(X):

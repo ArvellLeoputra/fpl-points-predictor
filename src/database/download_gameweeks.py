@@ -12,8 +12,9 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from src.config import ROOT
+
 BASE_URL = "https://fantasy.premierleague.com/api"
-ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "raw"
 REQUEST_DELAY = 0.1
 TIMEOUT = 30

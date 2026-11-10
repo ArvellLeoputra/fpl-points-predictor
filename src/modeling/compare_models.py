@@ -5,17 +5,17 @@ Train the models and compare their test MAE with the baseline.
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
 
-from evaluate import (
+from src.modeling.evaluate import (
     mean_absolute_error,
     by_group,
     print_results,
 )
-from features import (
+from src.modeling.features import (
     load_dataset,
     make_xy,
     split_train_test,
 )
-from models import baseline_predictions
+from src.modeling.models import baseline_predictions
 
 
 def main():

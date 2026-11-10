@@ -2,18 +2,18 @@
 Two-part prediction: P(player plays) x expected points if he plays
 """
 
-from evaluate import (
+from src.modeling.evaluate import (
     mean_absolute_error,
     root_mean_square_error,
     by_group,
     print_results,
 )
-from features import (
+from src.modeling.features import (
     load_dataset,
     make_xy,
     split_train_test,
 )
-from models import (
+from src.modeling.models import (
     baseline_predictions,
     train_play_model,
     train_points_model,

@@ -40,16 +40,16 @@ These results are preliminary: only 9 gameweeks of one season, a two-gameweek te
 
 ## How it works
 
-1. **Download** players, teams, positions and the match history of every player from the official FPL API (`src/download_gameweeks.py`).
-2. **Database**: build a SQLite database from `sql/schema.sql` and the CSV files, with primary and foreign keys and a consistency check (`src/build_db.py`).
+1. **Download** players, teams, positions and the match history of every player from the official FPL API (`src/database/download_gameweeks.py`).
+2. **Database**: build a SQLite database from `sql/schema.sql` and the CSV files, with primary and foreign keys and a consistency check (`src/database/build_db.py`)
 3. **SQL exploration**: value for money, rolling form with a window function, baseline error (`sql/*.sql`). Run one with:
 
    ```bash
    sqlite3 data/fpl.db < sql/value_for_money.sql
    ```
 
-4. **Features** (`src/features.py`): rolling averages of points, minutes and starts over the previous 5 matches, position, home or away, opponent strength, and price.
-5. **Models** (`src/models.py`) and **scoring** (`src/evaluate.py`), used by three experiments:
+4. **Features** (`src/modeling/features.py`): rolling averages of points, minutes and starts over the previous 5 matches, position, home or away, opponent strength, and price.
+5. **Models** (`models.py`) and **scoring** (`evaluate.py`), used by three experiments, all in `src/modeling/`:
    - `compare_models.py`: linear regression and trees against the baseline
    - `minutes_model.py`: does the player play? rule against classifier
    - `two_part_model.py`: P(plays) × points if he plays, against one model
@@ -74,17 +74,17 @@ pip install -r requirements.txt
 Run from the repository root:
 
 ```bash
-python src/download_gameweeks.py   # download raw data into data/raw/
-python src/build_db.py             # build data/fpl.db
-python src/compare_models.py       # results table of the models
-python src/minutes_model.py        # does the player play?
-python src/two_part_model.py       # two-part model, compared by RMSE
+python -m src.database.download_gameweeks   # download raw data into data/raw/
+python -m src.database.build_db             # build data/fpl.db
+python -m src.modeling.compare_models       # results table of the models
+python -m src.modeling.minutes_model        # does the player play?
+python -m src.modeling.two_part_model       # two-part model, compared by RMSE
 ```
 
 Quick test with only 5 players:
 
 ```bash
-python src/download_gameweeks.py --limit 5
+python -m src.database.download_gameweeks --limit 5
 ```
 
 The database and raw data are not stored in this repository. They are rebuilt by the first two commands. Re-run them after each gameweek to update the data.
@@ -93,24 +93,25 @@ The database and raw data are not stored in this repository. They are rebuilt by
 
 ```
 data/
-  raw/                    CSV files from the API (created by the scripts)
-  fpl.db                  SQLite database (created by build_db.py)
+  raw/                      CSV files from the API (created by the scripts)
+  fpl.db                    SQLite database (created by build_db.py)
 src/
-  download_gameweeks.py   download from the FPL API
-  build_db.py             schema + CSV files -> SQLite
-  config.py               paths, time split, feature settings
-  features.py             features and train/test split
-  models.py               baseline and model training
-  evaluate.py             error measures and results table
-  compare_models.py       linear regression and trees vs baseline
-  minutes_model.py        does the player play?
-  two_part_model.py       two-part model vs one model
+  config.py                 paths, time split, feature settings
+  database/
+    download_gameweeks.py   download from the FPL API
+    build_db.py             schema + CSV files -> SQLite
+  modeling/
+    features.py             features and train/test split
+    models.py               baseline and model training
+    evaluate.py             error measures and results table
+    compare_models.py       linear regression and trees vs baseline
+    minutes_model.py        does the player play?
+    two_part_model.py       two-part model vs one model
 sql/
-  schema.sql              table definitions
-  value_for_money.sql     points per million
-  rolling_form.sql        average of last 5 matches
-  baseline.sql            baseline error
-```
+  schema.sql                table definitions
+  value_for_money.sql       points per million
+  rolling_form.sql          average of last 5 matches
+  baseline.sql              baseline error
 
 ## Next steps
 
