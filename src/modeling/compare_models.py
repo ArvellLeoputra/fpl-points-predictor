@@ -1,5 +1,5 @@
 """
-Train the models and compare their test MAE with the baseline.
+Train the models and compare their test MAE and RMSE with the baseline.
 """
 
 from sklearn.ensemble import HistGradientBoostingRegressor
@@ -7,6 +7,7 @@ from sklearn.linear_model import LinearRegression
 
 from src.modeling.evaluate import (
     mean_absolute_error,
+    root_mean_square_error,
     by_group,
     print_results,
 )
@@ -20,7 +21,7 @@ from src.modeling.models import baseline_predictions
 
 def main():
     """
-    Train the models and compare their test MAE with the baseline.
+    Train the models and compare their test MAE and RMSE with the baseline.
     """
     df = load_dataset()
 
@@ -34,10 +35,7 @@ def main():
     # True for the test rows where the player played
     played_test = test.loc[y_test.index, "minutes"] > 0
 
-    results = {}
-
-    base_predictions = baseline_predictions(X_test)
-    results["baseline"] = by_group(mean_absolute_error, y_test, base_predictions, played_test)
+    predictions = {"baseline": baseline_predictions(X_test)}
 
     # Train a linear model and two boosted-tree models
     regressors = {
@@ -48,10 +46,20 @@ def main():
 
     for name, model in regressors.items():
         model.fit(X_train, y_train)
-        predictions = model.predict(X_test)
-        results[name] = by_group(mean_absolute_error, y_test, predictions, played_test)
-    print_results(results)
-    print()
+        predictions[name] = model.predict(X_test)
+
+    measures = {
+        "MAE": mean_absolute_error,
+        "RMSE": root_mean_square_error,
+    }
+    for title, measure in measures.items():
+        results = {
+            name: by_group(measure, y_test, values, played_test)
+            for name, values in predictions.items()
+        }
+        print(f"{title}:")
+        print_results(results)
+        print()
 
     # Print the coefficients of the linear regression model
     linear = regressors["linear"]
