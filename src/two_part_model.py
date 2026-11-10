@@ -50,17 +50,18 @@ def main():
         "two-part": probabilities * expected_points,
     }
 
-    results = {
-        name: by_group(mean_absolute_error, y_test, values, played_test)
-        for name, values in predictions.items()
+    measures = {
+        "MAE": mean_absolute_error,
+        "RMSE": root_mean_square_error,
     }
-    print("MAE:")
-    print_results(results)
-    print()
-
-    print("RMSE:")
-    for name, values in predictions.items():
-        print(f"{name:14}{root_mean_square_error(y_test, values):.3f}")
+    for title, measure in measures.items():
+        results = {
+            name: by_group(measure, y_test, values, played_test)
+            for name, values in predictions.items()
+        }
+        print(f"{title}:")
+        print_results(results)
+        print()
 
 
 if __name__ == "__main__":

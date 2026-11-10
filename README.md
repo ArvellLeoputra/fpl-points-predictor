@@ -21,13 +21,13 @@ Columns: *All rows* is every player-match in the test set. *Played only* is the 
 
 Expected points = probability that the player plays × expected points if he plays (both gradient-boosted trees). Since it predicts the mean, it is compared by RMSE (root mean squared error) and not by MAE.
 
-| Method | RMSE |
-|---|---|
-| Baseline: average of last 5 matches | 2.142 |
-| Single model: gradient-boosted trees (mean) | 2.157 |
-| Two-part model | 2.145 |
+| Method | All rows | Played | Not played |
+|---|---|---|---|
+| Baseline: average of last 5 matches | 2.142 | 2.958 | **1.030** |
+| Single model: gradient-boosted trees (mean) | 2.157 | 2.959 | 1.086 |
+| Two-part model | 2.145 | **2.927** | 1.116 |
 
-The three are within 0.02 of each other, which is within the noise of a two-gameweek test set. None of the models beats the baseline on RMSE. The model for "does the player play?" is right on 82.6% of the rows. A simple rule ("had minutes in the last 5 gameweeks") gets 81.2%.
+On all rows the three are within 0.02 of each other, which is within the noise of a two-gameweek test set. The two-part model is slightly best on players who played and slightly worse on players who did not.
 
 ## Short takeaways
 
