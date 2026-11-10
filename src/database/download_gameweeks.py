@@ -5,7 +5,6 @@ Download FPL players, teams, positions and per-gameweek history from the officia
 import argparse
 import logging
 import time
-from pathlib import Path
 
 import pandas as pd
 import requests

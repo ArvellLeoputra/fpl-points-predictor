@@ -4,12 +4,10 @@ Build the SQLite database from sql/schema.sql and the CSV files in data/raw/.
 
 import pandas as pd
 import sqlite3
-from pathlib import Path
 
-from src.config import ROOT
+from src.config import ROOT, DB_PATH
 
 SCHEMA_PATH = ROOT / "sql" / "schema.sql"
-DB_PATH = ROOT / "data" / "fpl.db"
 RAW_DIR = ROOT / "data" / "raw"
 
 # parents before children (foreign keys)
