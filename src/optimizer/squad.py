@@ -13,7 +13,7 @@ MAX_PER_CLUB = 3
 
 STARTING_ELEVEN = 11
 FORMATION_LIMITS = {1: (1, 1), 2: (3, 5), 3: (2, 5), 4: (1, 3)}  # fewest and most starters per position
-BENCH_WEIGHT = 0.3  # a bench player counts a little, because he can replace a starter
+BENCH_WEIGHT = 0.1  # a bench player counts a little, because he can replace a starter
 
 
 def one_row_per_player(week):
