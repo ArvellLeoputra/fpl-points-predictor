@@ -6,7 +6,7 @@ point predictions and add up the real points of each squad.
 import pandas as pd
 
 from src.modeling.predictions import predict_season
-from src.optimizer.squad import one_row_per_player, pick_squad
+from src.optimizer.squad import one_row_per_player, pick_squad, squad_points
 
 FIRST_ROUND = 6
 
@@ -31,7 +31,7 @@ def backtest(table, first_round=FIRST_ROUND):
         row = {"round": round_number}
         for method, column in METHODS.items():
             squad = pick_squad(players, column)
-            row[method] = squad.loc[squad["starts"], "total_points"].sum()
+            row[method] = squad_points(squad, "total_points")
         results.append(row)
     return pd.DataFrame(results).set_index("round")
 
