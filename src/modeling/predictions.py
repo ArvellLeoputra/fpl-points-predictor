@@ -9,6 +9,7 @@ from src.modeling.features import (
     split_train_test,
 )
 from src.modeling.models import (
+    baseline_predictions,
     train_play_model,
     train_points_model,
 )
@@ -36,6 +37,9 @@ def predict_season(test_season=TEST_SEASON):
     columns = ["code", "web_name", "club", "position", "round", "value", "total_points"]
     table = test.loc[X_test.index, columns].copy()
     table["predicted_points"] = probabilities * expected_points
+
+    table["baseline_points"] = baseline_predictions(X_test)
+    
     return table
 
 

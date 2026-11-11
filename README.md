@@ -1,6 +1,6 @@
 # FPL Points Predictor
 
-Predict Fantasy Premier League (FPL) player points for the next match. The project builds a SQLite database from the official FPL API and an archive of past seasons, explores it with SQL, and compares machine learning models, including a two-part model, with a simple baseline.
+Predict Fantasy Premier League (FPL) player points for the next match. The project builds a SQLite database from the official FPL API and an archive of past seasons, explores it with SQL, compares machine learning models, including a two-part model, with a simple baseline, and picks FPL squads with a mixed-integer program.
 
 ## Results
 
@@ -62,6 +62,35 @@ The first gameweeks are harder, because the form restarts every season and there
 
 Both are within the noise, so they are not in the model.
 
+## Squad optimizer and backtest
+
+For one gameweek, a mixed-integer program (PuLP with the HiGHS solver) picks a squad of 15 players and the starting 11 among them. The rules are the FPL rules: at most £100m, 2 goalkeepers, 5 defenders, 5 midfielders and 3 forwards, at most 3 players from one club, and a valid formation for the 11 (1 goalkeeper, 3 to 5 defenders, 2 to 5 midfielders, 1 to 3 forwards). The starters count fully in the objective, the bench counts with a weight of 0.1, because a bench player can replace a starter who does not play.
+
+To test it, I pick a squad for every gameweek from 6 to 38 of the season 2025-26, with three different point columns, and add up the real points of the starting 11:
+
+| Squad picked by | Average real points per gameweek |
+|---|---|
+| Model (predicted points) | 50.4 |
+| Baseline (average of the last 5 matches) | 43.7 |
+| Perfect (the real points, hindsight) | 137.9 |
+
+- The model squad scores 6.7 points more per gameweek than the baseline squad (about 15%), and it wins in 21 of 33 gameweeks. A rough 95% range for the real advantage is +1.5 to +11.8 points, so it is clearly positive, but based on one season.
+- It gets 36% of the points of the perfect squad, the baseline 32%. The perfect squad is only an upper limit, nobody can know the real points beforehand.
+- The bench weight is a setting, not a measured value. The result hardly changes with another weight:
+
+| Bench weight | Model | Baseline | Difference | Model wins |
+|---|---|---|---|---|
+| 0 | 51.5 | 43.9 | 7.6 | 70% |
+| 0.1 | 50.4 | 43.7 | 6.7 | 64% |
+| 0.3 | 51.0 | 43.4 | 7.6 | 70% |
+
+Limits:
+
+- Only the 11 starters count. There are no automatic substitutions and no captain (double points), so the test cannot say how much a good bench is worth in the real game.
+- Every gameweek is a new free squad with £100m. There are no transfers, no transfer costs and no change in team value.
+- One season, and a simple baseline.
+- The club of a player is the club at the end of the season, so it can be wrong for players who moved in January.
+
 ## How it works
 
 1. **Download**: players, teams, positions and the match history of the current season from the official FPL API (`src/database/download_gameweeks.py`), and the seasons 2022-23 to 2025-26 from a public archive of that API (`src/database/download_history.py`).
@@ -78,6 +107,7 @@ Both are within the noise, so they are not in the model.
    - `minutes_model.py`: does the player play? rule against classifier
    - `two_part_model.py`: P(plays) × points if he plays, against one model
    - `error_by_round.py`: error per block of gameweeks
+6. **Predictions and squad optimizer**: the two-part model predicts the points of every player-match of a test season (`src/modeling/predictions.py`). The optimizer picks a squad for one gameweek (`src/optimizer/squad.py`), and the backtest does it for every gameweek of a season (`src/optimizer/backtest.py`).
 
 Design choices:
 
@@ -110,6 +140,8 @@ python -m src.modeling.experiments.minutes_model        # does the player play?
 python -m src.modeling.experiments.two_part_model       # two-part model, compared by MAE and RMSE
 python -m src.modeling.experiments.error_by_round       # error per block of gameweeks
 python -m src.modeling.predictions                      # predicted points of one gameweek (shows the top 10)
+python -m src.optimizer.squad                           # best squad for one gameweek
+python -m src.optimizer.backtest                        # squads for a whole season, real points of each method
 ```
 
 Quick test with only 5 players:
@@ -142,6 +174,9 @@ src/
       minutes_model.py      does the player play?
       two_part_model.py     two-part model vs one model
       error_by_round.py     error per block of gameweeks
+  optimizer/
+    squad.py                best squad of 15 for one gameweek (mixed-integer program)
+    backtest.py             squads for a whole season, compared by real points
 sql/
   schema.sql                table definitions
   value_for_money.sql       points per million
@@ -151,7 +186,8 @@ sql/
 
 ## Next steps
 
-- Squad optimizer (mixed-integer program) and a backtest on the season 2025-26
+- Captain, automatic substitutions and transfers between gameweeks in the optimizer
+- Keep the rows without form for the trees (first gameweek and new players)
 - Better information about who plays (injuries, rotation); ownership did not help
 - More seasons (2020-21 and 2021-22 have no `starts` column) and model tuning
 - Automated weekly refresh
