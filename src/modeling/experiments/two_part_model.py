@@ -15,7 +15,8 @@ from src.modeling.features import (
 )
 from src.modeling.models import (
     baseline_predictions,
-    train_play_model,
+    fit_two_part_model,
+    predict_points,
     train_points_model,
 )
 
@@ -36,18 +37,13 @@ def main():
     # Single model: learns from all rows
     single_model = train_points_model(X_train, y_train)
 
-    # Two-part model, part 1: probability that the player plays
-    play_model = train_play_model(X_train, played_train)
-    probabilities = play_model.predict_proba(X_test)[:, 1]
-
-    # Two-part model, part 2: expected points if he plays
-    points_model = train_points_model(X_train[played_train], y_train[played_train])
-    expected_points = points_model.predict(X_test)
+    # Two-part model: probability that the player plays x points if he plays
+    two_part_models = fit_two_part_model(X_train, y_train, played_train)
 
     predictions = {
         "baseline": baseline_predictions(X_test),
         "single model": single_model.predict(X_test),
-        "two-part": probabilities * expected_points,
+        "two-part": predict_points(two_part_models, X_test),
     }
 
     measures = {

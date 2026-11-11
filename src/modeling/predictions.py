@@ -10,8 +10,8 @@ from src.modeling.features import (
 )
 from src.modeling.models import (
     baseline_predictions,
-    train_play_model,
-    train_points_model,
+    fit_two_part_model,
+    predict_points,
 )
 
 
@@ -24,32 +24,26 @@ def predict_season(test_season=TEST_SEASON):
 
     train, test = split_train_test(df, test_season)
     X_train, y_train = make_xy(train)
-    X_test, y_test = make_xy(test)
+    X_test, _ = make_xy(test)
 
     played_train = train.loc[y_train.index, "minutes"] > 0
-
-    play_model = train_play_model(X_train, played_train)
-    probabilities = play_model.predict_proba(X_test)[:, 1]
-
-    points_model = train_points_model(X_train[played_train], y_train[played_train])
-    expected_points = points_model.predict(X_test)
+    models = fit_two_part_model(X_train, y_train, played_train)
 
     columns = ["code", "web_name", "club", "position", "round", "value", "total_points"]
     table = test.loc[X_test.index, columns].copy()
-    table["predicted_points"] = probabilities * expected_points
-
+    table["predicted_points"] = predict_points(models, X_test)
     table["baseline_points"] = baseline_predictions(X_test)
-    
+
     return table
 
 
 def main():
     """
-    Show the ten players with the highest predicted points in selected gameweek
+    Show the ten players with the highest predicted points in gameweek 10 of 2026-27.
     """
     table = predict_season("2026-27")
     week = table[table["round"] == 10]
-    print(week.sort_values("predicted_points", ascending=False).head(20))
+    print(week.sort_values("predicted_points", ascending=False).head(10))
 
 
 if __name__ == "__main__":
