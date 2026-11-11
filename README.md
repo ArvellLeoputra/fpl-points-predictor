@@ -73,7 +73,7 @@ Both are within the noise, so they are not in the model.
    ```
 
 4. **Features** (`src/modeling/features.py`): rolling averages of points, minutes and starts over the previous 5 matches of the same season, position, home or away, opponent strength and price.
-5. **Models** (`models.py`) and **scoring** (`evaluate.py`), used by four scripts, all in `src/modeling/`:
+5. **Models** (`models.py`) and **scoring** (`evaluate.py`), used by four scripts, all in `src/modeling/experiments/`:
    - `compare_models.py`: linear regression and trees against the baseline, by MAE and RMSE
    - `minutes_model.py`: does the player play? rule against classifier
    - `two_part_model.py`: P(plays) × points if he plays, against one model
@@ -102,13 +102,13 @@ pip install -r requirements.txt
 Run from the repository root:
 
 ```bash
-python -m src.database.download_history     # past seasons into data/raw/history/ (only once)
-python -m src.database.download_gameweeks   # current season into data/raw/
-python -m src.database.build_db             # build data/fpl.db
-python -m src.modeling.compare_models       # results table of the models (MAE and RMSE)
-python -m src.modeling.minutes_model        # does the player play?
-python -m src.modeling.two_part_model       # two-part model, compared by MAE and RMSE
-python -m src.modeling.error_by_round       # error per block of gameweeks
+python -m src.database.download_history                 # past seasons into data/raw/history/ (only once)
+python -m src.database.download_gameweeks               # current season into data/raw/
+python -m src.database.build_db                         # build data/fpl.db
+python -m src.modeling.experiments.compare_models       # results table of the models (MAE and RMSE)
+python -m src.modeling.experiments.minutes_model        # does the player play?
+python -m src.modeling.experiments.two_part_model       # two-part model, compared by MAE and RMSE
+python -m src.modeling.experiments.error_by_round       # error per block of gameweeks
 ```
 
 Quick test with only 5 players:
@@ -117,7 +117,7 @@ Quick test with only 5 players:
 python -m src.database.download_gameweeks --limit 5
 ```
 
-The database and raw data are not stored in this repository. They are rebuilt by the first two commands. Re-run them after each gameweek to update the data.
+The database and raw data are not stored in this repository. They are rebuilt by the first three commands. Re-run them after each gameweek to update the data.
 
 ## Project structure
 
@@ -135,10 +135,11 @@ src/
     features.py             features and train/test split
     models.py               baseline and model training
     evaluate.py             error measures and results table
-    compare_models.py       linear regression and trees vs baseline
-    minutes_model.py        does the player play?
-    two_part_model.py       two-part model vs one model
-    error_by_round.py       error per block of gameweeks
+    experiments/
+      compare_models.py     linear regression and trees vs baseline
+      minutes_model.py      does the player play?
+      two_part_model.py     two-part model vs one model
+      error_by_round.py     error per block of gameweeks
 sql/
   schema.sql                table definitions
   value_for_money.sql       points per million
