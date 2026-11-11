@@ -109,6 +109,7 @@ python -m src.modeling.experiments.compare_models       # results table of the m
 python -m src.modeling.experiments.minutes_model        # does the player play?
 python -m src.modeling.experiments.two_part_model       # two-part model, compared by MAE and RMSE
 python -m src.modeling.experiments.error_by_round       # error per block of gameweeks
+python -m src.modeling.predictions                      # predicted points of one gameweek (shows the top 10)
 ```
 
 Quick test with only 5 players:
@@ -135,6 +136,7 @@ src/
     features.py             features and train/test split
     models.py               baseline and model training
     evaluate.py             error measures and results table
+    predictions.py          predicted points for one test season
     experiments/
       compare_models.py     linear regression and trees vs baseline
       minutes_model.py      does the player play?

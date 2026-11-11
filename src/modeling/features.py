@@ -24,6 +24,8 @@ def load_matches():
     query = """
         SELECT gs.*,
                p.code,
+               p.web_name,
+               p.team AS club,
                p.element_type AS position,
                CASE WHEN gs.was_home = 1 THEN t.strength_overall_away
                     ELSE t.strength_overall_home
@@ -95,13 +97,13 @@ def load_dataset():
     return df
 
 
-def split_train_test(df):
+def split_train_test(df, test_season=TEST_SEASON):
     """
-    Split by time: the seasons before TEST_SEASON for training,
-    TEST_SEASON for testing. Later seasons are dropped.
+    Split by time: the seasons before test_season for training,
+    test_season for testing. Later seasons are dropped.
     """
-    train = df[df["season"] < TEST_SEASON].copy()
-    test = df[df["season"] == TEST_SEASON].copy()
+    train = df[df["season"] < test_season].copy()
+    test = df[df["season"] == test_season].copy()
     return train, test
 
 
