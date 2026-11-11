@@ -25,6 +25,19 @@ CREATE TABLE positions(
     squad_max_play        INTEGER NOT NULL
 );
 
+CREATE TABLE fixtures(
+    season                TEXT NOT NULL,
+    id                    INTEGER NOT NULL,
+    event                 INTEGER,
+    kickoff_time          TEXT,
+    team_h                INTEGER NOT NULL,
+    team_a                INTEGER NOT NULL,
+    finished              INTEGER,
+    PRIMARY KEY (season, id),
+    FOREIGN KEY (season, team_h) REFERENCES teams(season, id),
+    FOREIGN KEY (season, team_a) REFERENCES teams(season, id)
+);
+
 CREATE TABLE players(
     season                                  TEXT NOT NULL,
     id                                      INTEGER NOT NULL,

@@ -60,6 +60,13 @@ def build_dataframe(data, section):
     return pd.DataFrame(data[section])
 
 
+def fetch_fixtures(session):
+    """
+    Download all fixtures of the season (who plays whom in which gameweek).
+    """
+    return pd.DataFrame(get_json(session, "fixtures"))
+
+
 def fetch_histories(session, player_ids):
     """
     Get the gameweek history of every player.
@@ -103,6 +110,7 @@ def main(limit=None):
     players = build_dataframe(data, "elements")
     teams = build_dataframe(data, "teams")
     positions = build_dataframe(data, "element_types")
+    fixtures = fetch_fixtures(session)
 
     player_ids = players["id"].tolist()[:limit]
 
@@ -112,6 +120,7 @@ def main(limit=None):
     history.to_csv(OUT_DIR / "gameweek_stats.csv", index=False)
     teams.to_csv(OUT_DIR / "teams.csv", index=False)
     positions.to_csv(OUT_DIR / "positions.csv", index=False)
+    fixtures.to_csv(OUT_DIR / "fixtures.csv", index=False)
 
     log.info("History shape: %s", history.shape)
     log.info("Players with history: %d", history["element"].nunique())
@@ -119,6 +128,7 @@ def main(limit=None):
         log.warning("Failed player ids: %s", failed)
     log.info("Teams shape: %s", teams.shape)
     log.info("Positions shape: %s", positions.shape)
+    log.info("Fixtures shape: %s", fixtures.shape)
 
 
 if __name__ == "__main__":

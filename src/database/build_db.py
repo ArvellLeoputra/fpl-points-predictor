@@ -12,7 +12,7 @@ RAW_DIR = ROOT / "data" / "raw"
 HISTORY_DIR = RAW_DIR / "history"
 
 # parents before children (foreign keys)
-TABLES = ["teams", "positions", "players", "gameweek_stats"]
+TABLES = ["teams", "positions", "fixtures", "players", "gameweek_stats"]
 
 # file names of the past seasons (positions are only loaded for the current season)
 HISTORY_FILES = {
