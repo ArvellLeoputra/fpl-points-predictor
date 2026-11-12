@@ -26,6 +26,9 @@ FORM_SOURCES = {
 # One 0/1 column per position (goalkeeper is the reference)
 POSITION_COLUMNS = ["position_2", "position_3", "position_4"]
 
+# Short position names for printing
+POSITION_NAMES = {1: "GKP", 2: "DEF", 3: "MID", 4: "FWD"}
+
 FORM_COLUMNS = [f"{prefix}_{FORM_WINDOW}" for prefix in FORM_SOURCES.values()]
 
 # The features used for training. opponent_strength is FPL's rating of the opponent

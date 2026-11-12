@@ -2,8 +2,12 @@
 Pick the best squad of 15 players for one gameweek.
 """
 
+import sqlite3
+
+import pandas as pd
 import pulp
 
+from src.config import DB_PATH, POSITION_NAMES
 from src.modeling.predictions import predict_season
 
 BUDGET = 1000  # £100m, prices are in tenths of £m
@@ -28,6 +32,7 @@ def one_row_per_player(week):
         predicted_points=("predicted_points", "sum"),
         baseline_points=("baseline_points", "sum"),
         total_points=("total_points", "sum"),
+        selected=("selected", "first"),
     )
 
 
@@ -94,6 +99,37 @@ def squad_points(squad, points_column):
     return starters[points_column].sum() + captain[points_column].sum()
 
 
+def load_club_names(season):
+    """
+    Short club names by club id for one season.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    teams = pd.read_sql("SELECT id, short_name FROM teams WHERE season = ?", conn, params=[season])
+    conn.close()
+    return dict(zip(teams["id"], teams["short_name"]))
+
+
+def print_squad(squad, season):
+    """
+    Print the squad with club and position names, the price and the predicted points.
+    """
+    # sort first, while the positions are still the numbers 1 to 4
+    squad = squad.sort_values(["position", "predicted_points"], ascending=[True, False]).copy()
+
+    squad["role"] = "bench"
+    squad.loc[squad["starts"], "role"] = "start"
+    squad.loc[squad["captain"], "role"] = "captain"
+
+    squad["price"] = squad["value"] / 10
+    squad["club"] = squad["club"].map(load_club_names(season))
+    squad["position"] = squad["position"].map(POSITION_NAMES)
+
+    columns = ["web_name", "club", "position", "price", "predicted_points", "role"]
+    print(squad[columns].to_string(index=False))
+    print(f"Price: {squad['price'].sum():.1f}m")
+    print(f"Predicted points: {squad_points(squad, 'predicted_points'):.1f}")
+
+
 def main():
     """
     Pick a squad for gameweek 10 of 2026-27 and show what it costs and scores.
@@ -102,16 +138,8 @@ def main():
     players = one_row_per_player(table[table["round"] == 10])
     squad = pick_squad(players, "predicted_points")
 
-    squad["role"] = "bench"
-    squad.loc[squad["starts"], "role"] = "start"
-    squad.loc[squad["captain"], "role"] = "captain"
-
-    columns = ["web_name", "club", "position", "value", "predicted_points", "role"]
-    ordered = squad[columns].sort_values(["position", "predicted_points"], ascending=[True, False])
-    print(ordered.to_string(index=False))
-    print(f"Price: {squad['value'].sum() / 10:.1f}m")
-    print(f"Predicted points: {squad_points(squad, 'predicted_points'):.1f}")
-    print(f"Real points: {squad_points(squad, 'total_points')}")
+    print_squad(squad, "2026-27")
+    print(f"Real points (starting 11 + captain): {squad_points(squad, 'total_points')}")
 
 
 if __name__ == "__main__":

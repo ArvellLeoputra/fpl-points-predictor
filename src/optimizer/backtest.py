@@ -5,15 +5,18 @@ point predictions and add up the real points of each squad.
 
 import pandas as pd
 
-from src.modeling.predictions import predict_season
+from src.config import ROOT
+from src.modeling.predictions import predict_season_retrained
 from src.optimizer.squad import one_row_per_player, pick_squad, squad_points
 
 FIRST_ROUND = 6
+RESULTS_PATH = ROOT / "docs" / "backtest_results.csv"
 
 # squads are picked by these columns; the real points are always total_points
 METHODS = {
     "model": "predicted_points",
     "baseline": "baseline_points",
+    "popular": "selected",
     "perfect": "total_points",
 }
 
@@ -40,13 +43,16 @@ def main():
     """
     Backtest on the test season and print the average real points per gameweek.
     """
-    results = backtest(predict_season())
+    results = backtest(predict_season_retrained())
+    RESULTS_PATH.parent.mkdir(exist_ok=True)
+    results.to_csv(RESULTS_PATH)
     print(results)
     print()
     print("Average real points per gameweek:")
     print(results.mean().round(1))
     print()
     print(f"Model beats baseline in {(results['model'] > results['baseline']).mean():.0%} of the gameweeks")
+    print(f"Model beats most-owned in {(results['model'] > results['popular']).mean():.0%} of the gameweeks")
 
 
 if __name__ == "__main__":
