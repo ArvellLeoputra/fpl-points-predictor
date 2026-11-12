@@ -1,199 +1,177 @@
-# FPL Points Predictor
+<p align="center">
+  <img src="docs/banner.png" alt="FPL Points Predictor" width="100%">
+</p>
 
-Predict Fantasy Premier League (FPL) player points for the next match. The project builds a SQLite database from the official FPL API and an archive of past seasons, explores it with SQL, compares machine learning models, including a two-part model, with a simple baseline, and picks FPL squads with a mixed-integer program.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/SQLite-database-003B57?logo=sqlite&logoColor=white" alt="SQLite">
+  <img src="https://img.shields.io/badge/pandas-data-150458?logo=pandas&logoColor=white" alt="pandas">
+  <img src="https://img.shields.io/badge/scikit--learn-model-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn">
+  <img src="https://img.shields.io/badge/PuLP%20%2B%20HiGHS-optimizer-2da44e" alt="PuLP and HiGHS">
+</p>
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Results](#results)
+- [How it works](#how-it-works)
+- [Example squad](#example-squad)
+- [Quick start](#quick-start)
+- [Roadmap](#roadmap)
+
+## Overview
+
+**The problem.** Every gameweek, a Fantasy Premier League (FPL) manager picks 15 players under a £100m budget, with rules on positions, clubs and formation. Which players will score the most points?
+
+**The approach.** A machine learning model predicts the points of every player from his recent form, the opponent and his price. A mixed-integer program then picks the squad, the starting 11 and the captain with the most predicted points under the FPL rules.
+
+**The result.** In a backtest on the 2025-26 season, squads picked with the model scored 18% more points than squads picked by recent form, and 8% more than squads of the most-owned players (a smaller, .
+
+<p align="center">
+  <img src="docs/backtest.png" alt="Backtest on the 2025-26 season" width="760">
+</p>
 
 ## Results
 
-The models are trained on the seasons 2022-23 to 2024-25 and tested on the full season 2025-26 (28,906 player-matches).
+All numbers are for the 2025-26 season, and every prediction uses only matches played before it.
 
-Two measures: RMSE counts big misses more, so a model has to predict the expected points of a player to score well. I choose the best model by RMSE. MAE is the average number of FPL points the prediction is off. *Played* means the player had at least one minute, *Not played* means 0 minutes.
-
-### RMSE: decides the best model
-
-| Method | All rows | Played | Not played |
+| Squad picked by | Points per gameweek | Share of the perfect squad | Model ahead in |
 |---|---|---|---|
-| Baseline: average of last 5 matches | 2.108 | 3.201 | 0.893 |
-| Linear regression | 1.967 | 3.014 | 0.769 |
-| Gradient-boosted trees (median) | 2.136 | 3.399 | **0.415** |
-| Gradient-boosted trees (mean) | 1.958 | 2.998 | 0.773 |
-| Two-part model | **1.955** | **2.997** | 0.763 |
+| **Model** | **58.2** | **38%** | – |
+| Most-owned players | 53.9 | 35% | 20 of 33 gameweeks |
+| Recent form | 49.4 | 32% | 23 of 33 gameweeks |
+| Perfect (hindsight) | 155.1 | 100% | – |
 
-### MAE: the average miss in points
+- **Better predictions:** the model cuts the prediction error by 7% compared with recent form (RMSE 1.955 vs 2.108).
+- **Clear gain over recent form:** +8.9 points per gameweek, with a rough 95% range of +4.1 to +13.7.
+- **Smaller edge over the most-owned players:** +4.3 points per gameweek (range −0.9 to +9.5), too close to call after one season. Managers react to injury news, and the backtest has none, because the data has no record of past injuries.
 
-| Method | All rows | Played | Not played |
-|---|---|---|---|
-| Baseline: average of last 5 matches | 1.042 | 2.223 | 0.300 |
-| Linear regression | 1.021 | 1.986 | 0.414 |
-| Gradient-boosted trees (median) | **0.886** | 2.096 | **0.126** |
-| Gradient-boosted trees (mean) | 0.989 | 1.970 | 0.372 |
-| Two-part model | 0.981 | **1.968** | 0.361 |
-
-- The trees minimize either the absolute error (median) or the squared error (mean).
-- The two-part model is the probability that the player plays × the expected points if he plays (both gradient-boosted trees, mean). It is within 0.003 of the single trees (mean) on RMSE, so it does not clearly beat it.
-- Trees (median) win the MAE on all rows, but have the worst RMSE, even worse than the baseline. The median of similar players is almost always about 0, so they predict about 0 for almost everyone and miss every big score.
-
-## Short takeaways
-
-- The models clearly beat the baseline. On players who played, the trees (mean) are 0.25 points better (1.970 vs 2.223, about 11%). The RMSE drops from 2.108 to 1.955 (7%) with the two-part model.
-- A straight formula cannot predict exactly 0 for players who do not play. Linear regression is worse than the baseline on those rows (MAE 0.414 vs 0.300), while the trees (median) predict about 0 (0.126). They win the MAE on all rows (0.886) because 61% of the rows are players who did not play, but they are the weakest of the models on players who played (2.096).
-- Splitting the problem into "does he play?" and "points if he plays" does not help much (RMSE 1.955 vs 1.958 for one model). The classifier is right on 86.5% of the rows, a simple rule ("had minutes in the last 5 gameweeks") on 84.4%.
-- In the linear model, a player whose average is 6 points higher gets about 1.4 more predicted points, and going from 0 to 90 average minutes adds about 2.2. Playing at home adds about 0.2, and the strongest opponent instead of the weakest takes off about 0.5. Position adds little once price and minutes are known.
-
-These results are preliminary: one test season, no tuning yet, and differences of about 0.01 or less are noise (a different random seed moved some numbers by up to 0.015).
-
-## Where the errors are
-
-The error per block of gameweeks in the test season (MAE, all rows):
-
-| Gameweeks | Rows | Baseline | Two-part model |
-|---|---|---|---|
-| 1-5 | 2,847 | 1.167 | 1.045 |
-| 6-15 | 7,484 | 1.058 | 1.004 |
-| 16-38 | 18,575 | 1.016 | 0.962 |
-
-Here the MAE is used for both methods, so the numbers can be compared with the MAE columns in the table above.
-
-The first gameweeks are harder, because the form restarts every season and there is little of it yet. The model helps most there (0.12 better than the baseline, against 0.05 later). The first block has only 10% of the rows, so even a perfect fix would improve the total by less than 0.01.
-
-## What did not help
-
-- **Rolling xG, xA, ICT and BPS** (average of the last 5 matches): the MAE changed by about 0.005. The form of points, minutes and starts already contains most of it.
-- **Relative ownership** (owners of the player divided by the owners of the most owned player in the same gameweek): again about 0.005, and the "does he play?" accuracy stayed at about 86.5%.
-
-Both are within the noise, so they are not in the model.
-
-## Squad optimizer and backtest
-
-For one gameweek, a mixed-integer program (PuLP with the HiGHS solver) picks a squad of 15 players and the starting 11 among them. The rules are the FPL rules: at most £100m, 2 goalkeepers, 5 defenders, 5 midfielders and 3 forwards, at most 3 players from one club, and a valid formation for the 11 (1 goalkeeper, 3 to 5 defenders, 2 to 5 midfielders, 1 to 3 forwards). The starters count fully in the objective, the bench counts with a weight of 0.1, because a bench player can replace a starter who does not play.
-
-To test it, I pick a squad for every gameweek from 6 to 38 of the season 2025-26, with three different point columns, and add up the real points of the starting 11:
-
-| Squad picked by | Average real points per gameweek |
-|---|---|
-| Model (predicted points) | 50.4 |
-| Baseline (average of the last 5 matches) | 43.7 |
-| Perfect (the real points, hindsight) | 137.9 |
-
-- The model squad scores 6.7 points more per gameweek than the baseline squad (about 15%), and it wins in 21 of 33 gameweeks. A rough 95% range for the real advantage is +1.5 to +11.8 points, so it is clearly positive, but based on one season.
-- It gets 36% of the points of the perfect squad, the baseline 32%. The perfect squad is only an upper limit, nobody can know the real points beforehand.
-- The bench weight is a setting, not a measured value. The result hardly changes with another weight:
-
-| Bench weight | Model | Baseline | Difference | Model wins |
-|---|---|---|---|---|
-| 0 | 51.5 | 43.9 | 7.6 | 70% |
-| 0.1 | 50.4 | 43.7 | 6.7 | 64% |
-| 0.3 | 51.0 | 43.4 | 7.6 | 70% |
-
-Limits:
-
-- Only the 11 starters count. There are no automatic substitutions and no captain (double points), so the test cannot say how much a good bench is worth in the real game.
-- Every gameweek is a new free squad with £100m. There are no transfers, no transfer costs and no change in team value.
-- One season, and a simple baseline.
-- The club of a player is the club at the end of the season, so it can be wrong for players who moved in January.
+All models, the MAE, the error per block of gameweeks, the bench weight and the limits of the backtest are in [docs/results.md](docs/results.md).
 
 ## How it works
 
-1. **Download**: players, teams, positions and the match history of the current season from the official FPL API (`src/database/download_gameweeks.py`), and the seasons 2022-23 to 2025-26 from a public archive of that API (`src/database/download_history.py`).
-2. **Database**: build a SQLite database from `sql/schema.sql` and the CSV files. Every table has a `season` column, with primary and foreign keys and a consistency check (`src/database/build_db.py`). Managers (a separate type in 2024-25) and duplicated matches are removed.
-3. **SQL exploration**: value for money, rolling form with a window function, baseline error (`sql/*.sql`). Run one with:
+<p align="center">
+  <img src="docs/pipeline.png" alt="Steps of the project" width="800">
+</p>
 
-   ```bash
-   sqlite3 data/fpl.db < sql/value_for_money.sql
-   ```
+1. **Data.** Players, teams, fixtures and matches of the current season from the official FPL API, and four past seasons from vaastav's public archive of that API, [Fantasy-Premier-League](https://github.com/vaastav/Fantasy-Premier-League). Everything goes into one SQLite database, with a season column in every table, so all seasons are queried the same way.
+2. **Features.** Average points, minutes and starts over the previous 5 matches of the same season, position, home or away, opponent strength and price: only what is known before kickoff.
+3. **Model.** Most player-matches end with 0 points because the player does not play. So the model has two parts, both gradient-boosted trees: the probability that the player plays, and his expected points if he plays. The prediction is their product. Before each gameweek, the model is trained again on all finished matches.
+4. **Optimizer.** Taking the 15 highest predictions would break the budget, the positions and the club limit. A mixed-integer program (PuLP with the HiGHS solver) finds the best squad that respects all FPL rules, and chooses the starting 11 and the captain at the same time, because the captain's double points can change who is worth buying.
+5. **Squad.** The result is 15 players, the starting 11 and a captain for the next gameweek. The unplayed matches get their features with the same code as the finished ones, and players who are injured or suspended are left out.
 
-4. **Features** (`src/modeling/features.py`): rolling averages of points, minutes and starts over the previous 5 matches of the same season, position, home or away, opponent strength and price.
-5. **Models** (`models.py`) and **scoring** (`evaluate.py`), used by four scripts, all in `src/modeling/experiments/`:
-   - `compare_models.py`: linear regression and trees against the baseline, by MAE and RMSE
-   - `minutes_model.py`: does the player play? rule against classifier
-   - `two_part_model.py`: P(plays) × points if he plays, against one model
-   - `error_by_round.py`: error per block of gameweeks
-6. **Predictions and squad optimizer**: the two-part model predicts the points of every player-match of a test season (`src/modeling/predictions.py`). The optimizer picks a squad for one gameweek (`src/optimizer/squad.py`), and the backtest does it for every gameweek of a season (`src/optimizer/backtest.py`).
+<details>
+<summary>The optimization model</summary>
 
-Design choices:
+For every player $i$ with predicted points $p_i$ and price $v_i$ (in £m), three yes/no decisions: $x_i$ (in the squad), $s_i$ (starts) and $c_i$ (captain).
 
-- **Only information from before the match.** The form uses the player's earlier matches only (the current match is excluded). Price, home or away and the opponent are known before kickoff.
-- **One person, one id across seasons.** FPL player ids change every season, so players are identified by the `code`.
-- **The form restarts every season.** The form uses only the matches of the same season. A match from months ago says little about the player now. A player's first match of a season has no form yet, so these rows are dropped (2,427 training rows, 841 test rows).
-- **Opponent strength on the same scale.** The ratings in the archive run from about 975 to 1370, in the current API from 2 to 5. Each season is rescaled from 0 (weakest opponent) to 1 (strongest).
-- **Time-based split.** Train on earlier seasons, test on the next one. A random split would let the model learn from the future.
-- **Only finished matches.** Matches that were not finished at download time have placeholder values and are removed.
-- **Fair evaluation.** Every method is scored on the same rows, and also on the players who played alone. Most rows are players who did not play. They are easy to predict, which makes the overall error look better than it is.
+$$
+\max \sum_i p_i \left( s_i + 0.1\,(x_i - s_i) + c_i \right)
+$$
 
-## Setup
+subject to
+
+$$
+\begin{aligned}
+&\textstyle\sum_i x_i = 15, \quad \sum_i v_i x_i \le 100 && \text{squad size and budget} \\
+&\textstyle\sum_{i \in P} x_i = n_P \quad \text{for each position } P \;(n = 2, 5, 5, 3) && \text{players per position} \\
+&\textstyle\sum_{i \in C} x_i \le 3 \quad \text{for each club } C && \text{at most 3 per club} \\
+&s_i \le x_i, \quad \textstyle\sum_i s_i = 11, \quad l_P \le \sum_{i \in P} s_i \le u_P && \text{starting 11 and formation} \\
+&\textstyle\sum_{i \in P} x_i = n_P \quad \text{for each position } P && \text{players per position} \\
+&\textstyle\sum_{i \in C} x_i \le 3 \quad \text{for each club } C && \text{at most 3 per club} \\
+&s_i \le x_i, \quad \textstyle\sum_i s_i = 11 && \text{starting 11} \\
+&l_P \le \textstyle\sum_{i \in P} s_i \le u_P \quad \text{for each position } P \;(l = 1, 3, 2, 1;\ u = 1, 5, 5, 3) && \text{valid formation} \\
+&c_i \le s_i, \quad \textstyle\sum_i c_i = 1 && \text{one captain among the starters} \\
+&x_i, s_i, c_i \in \{0, 1\}
+\end{aligned}
+$$
+
+A starter counts fully, a bench player with weight 0.1 (he may come on for a starter who does not play), and the captain once more, so his points count double.
+
+</details>
+
+### Design choices
+
+- **Only information from before the match.** The form uses earlier matches only. Price, home or away and the opponent are known before kickoff.
+- **Time-based split.** Train on earlier matches, test on later ones. A random split would let the model learn from the future.
+- **One id per player across seasons.** FPL ids change every season, so players are matched by their `code`.
+- **Opponent strength on one scale.** The archive and the current API rate teams differently, so each season is rescaled from 0 to 1.
+
+## Example squad
+
+The squad the model picked on 12 November 2026 for gameweek 11 of 2026-27. The 64.8 predicted points count the starting 11, with the captain's points doubled.
+
+<p align="center">
+  <img src="docs/squad.png" alt="Output of the next-gameweek command" width="640">
+</p>
+
+## Quick start
+
+Needs Python 3.14 (tested) and an internet connection for the FPL API.
+
+**1. Install**
 
 ```bash
+git clone https://github.com/ArvellLeoputra/fpl-points-predictor.git
+cd fpl-points-predictor
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # on Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Usage
-
-Run from the repository root:
+**2. Build the database**
 
 ```bash
-python -m src.database.download_history                 # past seasons into data/raw/history/ (only once)
-python -m src.database.download_gameweeks               # current season into data/raw/
-python -m src.database.build_db                         # build data/fpl.db
-python -m src.modeling.experiments.compare_models       # results table of the models (MAE and RMSE)
-python -m src.modeling.experiments.minutes_model        # does the player play?
-python -m src.modeling.experiments.two_part_model       # two-part model, compared by MAE and RMSE
-python -m src.modeling.experiments.error_by_round       # error per block of gameweeks
-python -m src.modeling.predictions                      # predicted points of one gameweek (shows the top 10)
-python -m src.optimizer.squad                           # best squad for one gameweek
-python -m src.optimizer.backtest                        # squads for a whole season, real points of each method
+python -m src.database.download_history      # past seasons (only once)
+python -m src.database.download_gameweeks    # current season
+python -m src.database.build_db              # builds data/fpl.db
 ```
 
-Quick test with only 5 players:
+**3. Pick a squad for the next gameweek**
 
 ```bash
-python -m src.database.download_gameweeks --limit 5
+python -m src.optimizer.next_gameweek
 ```
 
-The database and raw data are not stored in this repository. They are rebuilt by the first three commands. Re-run them after each gameweek to update the data.
+After each gameweek, run step 2 (without the first line) and step 3 again. The database and the raw data are not stored in this repository.
 
-## Project structure
+<details>
+<summary>All commands</summary>
 
-```
-data/
-  raw/                      CSV files from the API and the archive
-  fpl.db                    SQLite database
-src/
-  config.py                 paths, seasons, feature settings
-  database/
-    download_gameweeks.py   current season from the FPL API
-    download_history.py     past seasons from the archive
-    build_db.py             schema + CSV files -> SQLite
-  modeling/
-    features.py             features and train/test split
-    models.py               baseline and model training
-    evaluate.py             error measures and results table
-    predictions.py          predicted points for one test season
-    experiments/
-      compare_models.py     linear regression and trees vs baseline
-      minutes_model.py      does the player play?
-      two_part_model.py     two-part model vs one model
-      error_by_round.py     error per block of gameweeks
-  optimizer/
-    squad.py                best squad of 15 for one gameweek (mixed-integer program)
-    backtest.py             squads for a whole season, compared by real points
-sql/
-  schema.sql                table definitions
-  value_for_money.sql       points per million
-  rolling_form.sql          average of last 5 matches
-  baseline.sql              baseline error
+```bash
+# SQL queries on the database (needs the sqlite3 command-line tool)
+sqlite3 data/fpl.db < sql/value_for_money.sql             # points per million
+sqlite3 data/fpl.db < sql/rolling_form.sql                # average of the last 5 matches
+sqlite3 data/fpl.db < sql/baseline.sql                    # error of the baseline
+
+# Experiments
+python -m src.modeling.experiments.compare_models         # linear regression and trees against the baseline
+python -m src.modeling.experiments.minutes_model          # does the player play?
+python -m src.modeling.experiments.two_part_model         # two-part model against one model
+python -m src.modeling.experiments.error_by_round         # error per block of gameweeks
+python -m src.modeling.experiments.weekly_training        # train once against train every gameweek
+
+# Predictions and squads
+python -m src.modeling.predictions                        # predicted points of one gameweek (top 10)
+python -m src.optimizer.squad                             # best squad for one gameweek
+python -m src.optimizer.backtest                          # squads for a whole season
+
+# Pictures of this README
+python -m src.plots.backtest_chart                        # backtest chart
+python -m src.plots.banner                                # banner
+python -m src.plots.pipeline                              # steps picture
+python -m src.plots.terminal                              # example squad
 ```
 
-## Next steps
+</details>
 
-- Captain, automatic substitutions and transfers between gameweeks in the optimizer
-- Keep the rows without form for the trees (first gameweek and new players)
-- Better information about who plays (injuries, rotation); ownership did not help
-- More seasons (2020-21 and 2021-22 have no `starts` column) and model tuning
-- Automated weekly refresh
+## Roadmap
 
-## Data source
+- Transfers between gameweeks (1 free transfer per gameweek, −4 points for each extra one) and automatic substitutions
+- Save the injury news every week, so later backtests can use it
+- Track the real points of each predicted squad during the season
+- Backtest from gameweek 2, with a way to handle the thin form in the first weeks
+- Weekly refresh with GitHub Actions
+- More seasons and model tuning
 
-Current season: official FPL API (`fantasy.premierleague.com/api`).
-
-Past seasons: the public archive of that API by vaastav, [Fantasy-Premier-League](https://github.com/vaastav/Fantasy-Premier-League).
+<p align="right"><a href="#top">Back to top</a></p>
