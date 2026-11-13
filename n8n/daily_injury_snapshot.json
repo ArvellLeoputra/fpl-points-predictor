@@ -12,7 +12,9 @@
         0
       ],
       "id": "011ac5f7-50a3-4c54-8716-a5833dee490b",
-      "name": "HTTP Request"
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
     },
     {
       "parameters": {
