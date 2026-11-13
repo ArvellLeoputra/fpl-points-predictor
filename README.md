@@ -174,4 +174,19 @@ python -m src.plots.terminal                              # example squad
 - Weekly refresh with GitHub Actions
 - More seasons and model tuning
 
+## Daily injury snapshot
+
+The backtest has no injury information, because the FPL data only shows each player's status today. To fill this gap, an [n8n](https://n8n.io) workflow saves the status and news of every player once a day.
+
+<p align="center">
+  <img src="docs/n8n_workflow.png" alt="The n8n workflow for the daily injury snapshot" width="900">
+</p>
+
+1. **Schedule.** The workflow starts every day at 14:00 (Berlin time).
+2. **Download.** It gets the player list from the FPL API, and tries again up to 3 times if the website fails.
+3. **Clean.** It splits the list into one row per player, keeps 17 fields (status, news, chance of playing, price, ownership and more) and adds the date.
+4. **Save.** It writes one CSV file per day.
+
+After a few months, these files can give the model what it does not have today: who was injured before each gameweek. The workflow is saved in [`n8n/daily_injury_snapshot.json`](n8n/daily_injury_snapshot.json). In n8n, paste it into a new workflow to use it.
+
 <p align="right"><a href="#top">Back to top</a></p>
