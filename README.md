@@ -174,8 +174,8 @@ The backtest has no injury information, because the FPL data only shows each pla
 1. **Schedule.** The workflow starts every day at 14:00 (Berlin time).
 2. **Download.** It gets the player list from the FPL API, and tries again up to 3 times if the website fails.
 3. **Clean.** It splits the list into one row per player, keeps 17 fields (status, news, chance of playing, price, ownership and more) and adds the date.
-4. **Classify.** For the players who have a news text (about 190), an LLM (gpt-oss-20b on Groq) returns the category, the injured body part and the expected return date. If a request fails, the row gets unknown.
-5  **Save.** It writes one CSV file per day with 21 columns, about 25 minutes after the start.
+4. **Classify.** For the players who have a news text (about 190), an LLM (`gpt-oss-20b` on Groq) returns the category, the injured body part and the expected return date. If a request fails, the row gets `unknown`.
+5.  **Save.** It writes one CSV file per day with 21 columns, about 25 minutes after the start.
 
 After a few months, these files can give the model what it does not have today: who was injured before each gameweek. The workflow is saved in [`n8n/daily_injury_snapshot.json`](n8n/daily_injury_snapshot.json). In n8n, paste it into a new workflow to use it. The files are saved in `~/.n8n-files` on the computer where n8n runs. After importing the workflow, set your own folder name in the last box.
 
