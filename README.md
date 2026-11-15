@@ -17,8 +17,8 @@
 - [How it works](#how-it-works)
 - [Example squad](#example-squad)
 - [Quick start](#quick-start)
-- [Roadmap](#roadmap)
 - [Daily injury snapshot](#daily-injury-snapshot)
+- [Roadmap](#roadmap)
 
 ## Overview
 
@@ -26,7 +26,7 @@
 
 **The approach.** A machine learning model predicts the points of every player from his recent form, the opponent and his price. A mixed-integer program then picks the squad, the starting 11 and the captain with the most predicted points under the FPL rules.
 
-**The result.** In a backtest on the 2025-26 season, squads picked with the model scored 18% more points than squads picked by recent form, and 8% more than squads of the most-owned players (a smaller, .
+**The result.** In a backtest on the 2025-26 season, squads picked with the model scored 18% more points than squads picked by recent form, and 8% more than squads of the most-owned players (a smaller gain that is too close to call after one season).
 
 <p align="center">
   <img src="docs/backtest.png" alt="Backtest on the 2025-26 season" width="760">
@@ -76,9 +76,6 @@ $$
 \begin{aligned}
 &\textstyle\sum_i x_i = 15, \quad \sum_i v_i x_i \le 100 && \text{squad size and budget} \\
 &\textstyle\sum_{i \in P} x_i = n_P \quad \text{for each position } P \;(n = 2, 5, 5, 3) && \text{players per position} \\
-&\textstyle\sum_{i \in C} x_i \le 3 \quad \text{for each club } C && \text{at most 3 per club} \\
-&s_i \le x_i, \quad \textstyle\sum_i s_i = 11, \quad l_P \le \sum_{i \in P} s_i \le u_P && \text{starting 11 and formation} \\
-&\textstyle\sum_{i \in P} x_i = n_P \quad \text{for each position } P && \text{players per position} \\
 &\textstyle\sum_{i \in C} x_i \le 3 \quad \text{for each club } C && \text{at most 3 per club} \\
 &s_i \le x_i, \quad \textstyle\sum_i s_i = 11 && \text{starting 11} \\
 &l_P \le \textstyle\sum_{i \in P} s_i \le u_P \quad \text{for each position } P \;(l = 1, 3, 2, 1;\ u = 1, 5, 5, 3) && \text{valid formation} \\
@@ -171,15 +168,26 @@ python -m src.plots.terminal                              # example squad
 The backtest has no injury information, because the FPL data only shows each player's status today. To fill this gap, an [n8n](https://n8n.io) workflow saves the status and news of every player once a day.
 
 <p align="center">
-  <img src="docs/n8n_workflow.png" alt="The n8n workflow for the daily injury snapshot" width="900">
+  <img src="docs/n8n_workflow.png" alt="The n8n workflow for the daily injury snapshot" width="1400">
 </p>
 
 1. **Schedule.** The workflow starts every day at 14:00 (Berlin time).
 2. **Download.** It gets the player list from the FPL API, and tries again up to 3 times if the website fails.
 3. **Clean.** It splits the list into one row per player, keeps 17 fields (status, news, chance of playing, price, ownership and more) and adds the date.
-4. **Save.** It writes one CSV file per day.
+4. **Classify.** For the players who have a news text (about 190), an LLM (gpt-oss-20b on Groq) returns the category, the injured body part and the expected return date. If a request fails, the row gets unknown.
+5  **Save.** It writes one CSV file per day with 21 columns, about 25 minutes after the start.
 
 After a few months, these files can give the model what it does not have today: who was injured before each gameweek. The workflow is saved in [`n8n/daily_injury_snapshot.json`](n8n/daily_injury_snapshot.json). In n8n, paste it into a new workflow to use it. The files are saved in `~/.n8n-files` on the computer where n8n runs. After importing the workflow, set your own folder name in the last box.
+
+### Reading the injury news
+
+Every day, the players who have a news text (about 190) are sent to an LLM (`gpt-oss-20b` on Groq's free tier) through n8n's Information Extractor node. It adds three columns to the file:
+
+- `llm_category`: injured, doubtful, suspended, loan_or_transfer or other
+- `llm_body_part`: for example hamstring or knee
+- `llm_expected_return`: a date, if the news gives one
+
+Requests are sent one at a time with an 8 second pause to stay inside the free limits, so a run takes about 25 minutes. If a request fails, the row gets `unknown` and the file is still saved. To import the workflow, create your own Groq API credential in n8n first.
 
 ## Roadmap
 
