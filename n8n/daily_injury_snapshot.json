@@ -1,4 +1,5 @@
 {
+  "name": "FPL daily injury snapshot (LLM)",
   "nodes": [
     {
       "parameters": {
@@ -13,10 +14,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        224,
+        288,
         0
       ],
-      "id": "a993755c-8bec-4996-9539-6f035fe8d5ef",
+      "id": "ab79235e-12e7-4272-af6b-a81c2e010bfa",
       "name": "Daily 14:00"
     },
     {
@@ -30,7 +31,7 @@
         448,
         0
       ],
-      "id": "011ac5f7-50a3-4c54-8716-a5833dee490b",
+      "id": "93f9b9c7-bf0c-45eb-a9f2-3c5408046720",
       "name": "FPL API",
       "retryOnFail": true,
       "waitBetweenTries": 5000
@@ -43,10 +44,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        672,
+        608,
         0
       ],
-      "id": "79a66473-775e-45ce-879a-fea8a75d0a5b",
+      "id": "81e972db-2680-4532-84cc-afde61ebffcb",
       "name": "Player rows"
     },
     {
@@ -69,10 +70,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        896,
+        768,
         0
       ],
-      "id": "58bb45c0-8c16-4d77-a119-9f574ebe9f60",
+      "id": "a4e624a8-12b6-409e-a887-6b68dbbc73ed",
       "name": "Select fields"
     },
     {
@@ -82,28 +83,192 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1120,
-        0
+        1840,
+        16
       ],
-      "id": "7f5be5cd-25de-4cb4-be4d-4f817f62747e",
+      "id": "2dd37f32-c44c-460d-bf74-e24bf18fcecf",
       "name": "Build CSV"
     },
     {
       "parameters": {
         "operation": "write",
-        "fileName": "=/home/arvellleo/.n8n-files/fpl_status_{{ $now.toFormat('yyyy-MM-dd') }}.csv",
+        "fileName": "=/home/YOURNAME/.n8n-files/fpl_status_{{ $now.toFormat('yyyy-MM-dd') }}.csv",
         "options": {}
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
       "position": [
-        1344,
-        0
+        2000,
+        16
       ],
-      "id": "78045c0d-af3d-45d3-b5d5-72749c7e25e1",
+      "id": "c1457171-5a60-4708-b2e3-4454c6032ecf",
       "name": "Save to disk"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b3cbd314-914c-4f86-8860-57e0a9dc525a",
+              "leftValue": "={{ $json.news }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        80
+      ],
+      "id": "04cd6334-2a88-47f3-9ce3-fd0a21b5cd5c",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "text": "=Today's date is {{ $now.toFormat('yyyy-MM-dd') }}. Player news: {{ $json.news }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "category",
+              "description": "One of: injured, doubtful, suspended, loan_or_transfer, other. Use “injured” if the player is ruled out by injury, “doubtful” if his availability is uncertain, “suspended” for bans. Use loan_or_transfer also for players who left the club or became free agents. Any text with a percentage chance of playing (25%, 50%, 75%) is doubtful. Use injured when the text says injury with an unknown return date or an expected return date and no percentage.",
+              "required": true
+            },
+            {
+              "name": "body_part",
+              "description": "The injured body part in lowercase English, like hamstring or knee. Leave empty if none is mentioned. For a muscular injury use muscle."
+            },
+            {
+              "name": "expected_return",
+              "description": "The expected return date as YYYY-MM-DD, if the text gives one. Leave empty if there is no date. If the text says Expected back followed by a day and month, always fill this field, in the next future year."
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nAlways return all three fields. If a value is not in the text, return an empty string.",
+          "batching": {
+            "batchSize": 1,
+            "delayBetweenBatches": 8000
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        1088,
+        176
+      ],
+      "id": "9366ace8-0765-42be-8b54-0d6bd585bdb1",
+      "name": "Information Extractor",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        320
+      ],
+      "id": "2963a6cd-8749-4ce6-b6e8-e90600658270",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "I6g3XYTG6Fzs7tcu",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        96
+      ],
+      "id": "dfc0e8c7-da06-4296-9516-6b604e10a90e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a98d40b0-2b08-453c-b017-b55d5ff51d32",
+              "name": "llm_category",
+              "value": "={{ $json.output?.category || 'unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "e15047d5-2558-4908-afaa-a19188c411b7",
+              "name": "llm_body_part",
+              "value": "={{ $json.output?.body_part || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "47aa84f8-bc96-4afe-a6c8-24a106b32b2a",
+              "name": "llm_expected_return",
+              "value": "={{ $json.output?.expected_return || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "id",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1520,
+        96
+      ],
+      "id": "da3f9463-e275-48f4-a661-7293ab2abbe2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id, id",
+        "joinMode": "enrichInput1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1680,
+        16
+      ],
+      "id": "b80cd69c-4628-42bd-974b-d2b8e1072b68",
+      "name": "Merge1"
     }
   ],
+  "pinData": {},
   "connections": {
     "Daily 14:00": {
       "main": [
@@ -142,7 +307,12 @@
       "main": [
         [
           {
-            "node": "Build CSV",
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
             "type": "main",
             "index": 0
           }
@@ -159,10 +329,94 @@
           }
         ]
       ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Build CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "pinData": {},
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Berlin",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "ddb580d8-739f-4222-a3fa-a1f4bba4ea27",
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "11ac47a8e688e7dce098ea83c9d6aa0b0995540654be05e7c2520468cecb6b8d"
-  }
+  },
+  "nodeGroups": [],
+  "id": "hgNbub8STZ2uWl1x",
+  "tags": []
 }
