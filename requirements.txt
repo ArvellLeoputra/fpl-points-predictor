@@ -4,3 +4,4 @@ scikit-learn
 pulp
 highspy
 matplotlib
+pytest
