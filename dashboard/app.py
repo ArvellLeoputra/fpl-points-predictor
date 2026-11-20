@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).resolve().parent / "data"
 POSITIONS = ["GKP", "DEF", "MID", "FWD"]
 COLUMNS = ["web_name", "club", "position", "price", "predicted_points"]
 COLUMN_CONFIG = {
@@ -18,25 +18,22 @@ COLUMN_CONFIG = {
 }
 
 
-# Load player data
 @st.cache_data(show_spinner=False)
 def load_players():
     players = pd.read_csv(DATA_DIR / "next_gameweek.csv")
     players["price"] = players["value"] / 10
     return players
 
-# Load squad data
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def load_squad():
     squad = pd.read_csv(DATA_DIR / "squad.csv")
     squad["price"] = squad["value"] / 10
     squad["position"] = pd.Categorical(squad["position"], categories=POSITIONS, ordered=True)
     return squad.sort_values(["position", "predicted_points"], ascending=[True, False])
 
-# Load backtest data
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def load_backtest():
-    path = Path(__file__).parent.parent / "docs" / "backtest_results.csv"
+    path = Path(__file__).resolve().parent.parent / "docs" / "backtest_results.csv"
     return pd.read_csv(path, index_col="round")
 
 
