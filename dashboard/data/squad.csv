@@ -12,5 +12,5 @@ code,web_name,club,position,value,predicted_points,baseline_points,starts,captai
 489639,Verbruggen,BHA,GKP,47,4.157635747573045,6.8,True,False
 496221,Wharton,CRY,MID,53,4.214786069167785,3.4,False,False
 509416,Ayari,BHA,MID,55,4.535560772338595,6.2,False,False
-517052,N.Jackson,AVL,FWD,71,5.118637331871477,8.8,True,False
+517052,N.Jackson,AVL,FWD,72,4.7645937303216215,8.8,True,False
 610799,Vuskovic,BHA,DEF,53,4.985143468728554,7.6,True,False
