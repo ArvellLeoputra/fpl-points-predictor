@@ -31,7 +31,7 @@ def predict_next_gameweek():
     upcoming = df[(df["season"] == CURRENT_SEASON) & (df["round"] == round_number) & (df["minutes"].isna())]
     X_new, _ = make_xy(upcoming)
 
-    columns = ["code", "web_name", "club", "position", "round", "value", "selected", "status", "total_points"]
+    columns = ["code", "web_name", "club", "position", "round", "value", "selected", "status", "total_points", "opponent_team", "was_home"]
     table = upcoming.loc[X_new.index, columns].copy()
     table["predicted_points"] = predict_points(models, X_new)
     table["baseline_points"] = baseline_predictions(X_new)
