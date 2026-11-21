@@ -81,6 +81,9 @@ squad = load_squad()
 results = load_backtest()
 
 round_number = players["round"].iloc[0]
+updated_on = pd.to_datetime(players["updated"].iloc[0])
+updated = f"{updated_on.day} {updated_on:%b %Y}"
+
 starters = squad[squad["starts"]]
 bench = squad[~squad["starts"]]
 captain = squad[squad["captain"]].iloc[0]
@@ -89,7 +92,7 @@ squad_points = starters["predicted_points"].sum() + captain["predicted_points"]
 # Sidebar
 with st.sidebar:
     st.title("FPL Points Predictor")
-    st.caption("Machine learning and optimization for Fantasy Premier League")
+    st.caption(f"Predictions for the next gameweek, based on FPL data from {updated}")
     st.markdown(
         "A model predicts every player's points for the next gameweek. "
         "An optimizer then picks the best 15-player squad within the £100m budget."

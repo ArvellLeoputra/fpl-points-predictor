@@ -1,6 +1,8 @@
 """
 Export the predictions and the best squad for the next gameweek, for the dashboard.
 """
+from datetime import date
+
 import sqlite3
 
 import pandas as pd
@@ -35,6 +37,7 @@ def main():
     players["fixture"] = table.groupby("code")["fixture"].agg(", ".join)
     players["ownership"] = load_ownership(CURRENT_SEASON)
     players["round"] = round_number
+    players["updated"] = date.today().isoformat()
 
     squad = pick_squad(players, "predicted_points")
 

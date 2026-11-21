@@ -8,6 +8,14 @@
   <img src="https://img.shields.io/badge/pandas-data-150458?logo=pandas&logoColor=white" alt="pandas">
   <img src="https://img.shields.io/badge/scikit--learn-model-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn">
   <img src="https://img.shields.io/badge/PuLP%20%2B%20HiGHS-optimizer-2da44e" alt="PuLP and HiGHS">
+  <img src="https://github.com/ArvellLeoputra/fpl-points-predictor/actions/workflows/tests.yml/badge.svg" alt="Tests">
+  <img src="https://img.shields.io/badge/Streamlit-dashboard-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
+</p>
+
+<p align="center">
+  <a href="https://fpl-points-predictor.streamlit.app/">
+    <img src="https://img.shields.io/badge/Live%20dashboard-open-1a9e4b?style=for-the-badge&logo=streamlit&logoColor=white" alt="Live dashboard">
+  </a>
 </p>
 
 ## Table of Contents
@@ -27,6 +35,8 @@
 **The approach.** A machine learning model predicts the points of every player from his recent form, the opponent and his price. A mixed-integer program then picks the squad, the starting 11 and the captain with the most predicted points under the FPL rules.
 
 **The result.** In a backtest on the 2025-26 season, squads picked with the model scored 18% more points than squads picked by recent form, and 8% more than squads of the most-owned players (a smaller gain that is too close to call after one season).
+
+**Try it.** The [live dashboard](https://fpl-points-predictor.streamlit.app/) shows the predicted points and the best squad for the next gameweek, updated automatically twice a week.
 
 <p align="center">
   <img src="docs/backtest.png" alt="Backtest on the 2025-26 season" width="760">
