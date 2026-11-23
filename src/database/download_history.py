@@ -7,7 +7,7 @@ from pathlib import Path
 
 import requests
 
-from src.config import ROOT, PAST_SEASONS
+from src.config import PAST_SEASONS, ROOT
 
 BASE_URL = "https://raw.githubusercontent.com/vaastav/Fantasy-Premier-League/master/data"
 FILES = ["gws/merged_gw.csv", "players_raw.csv", "teams.csv"]

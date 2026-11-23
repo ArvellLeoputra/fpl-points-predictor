@@ -123,8 +123,9 @@ Needs Python 3.14 (tested) and an internet connection for the FPL API.
 git clone https://github.com/ArvellLeoputra/fpl-points-predictor.git
 cd fpl-points-predictor
 python -m venv .venv
-source .venv/bin/activate          # on Windows: .venv\Scripts\activate
+source .venv/bin/activate             # on Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install -r requirements-dev.txt   # to run the tests
 ```
 
 **2. Build the database**

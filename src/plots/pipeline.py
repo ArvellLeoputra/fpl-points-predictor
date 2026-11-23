@@ -7,7 +7,15 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
 from src.config import ROOT
-from src.plots.style import GOLD, GREEN, LINE_GREY, SHADE, TEXT_FONT, TEXT_GREY, TITLE_FONT
+from src.plots.style import (
+    GOLD,
+    GREEN,
+    LINE_GREY,
+    SHADE,
+    TEXT_FONT,
+    TEXT_GREY,
+    TITLE_FONT,
+)
 
 OUTPUT_PATH = ROOT / "docs" / "pipeline.png"
 ARROW_GREY = "#8c959f"

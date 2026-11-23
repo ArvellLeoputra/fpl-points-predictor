@@ -1,15 +1,19 @@
 """
 Export the predictions and the best squad for the next gameweek, for the dashboard.
 """
-from datetime import date
-
 import sqlite3
+from datetime import date
 
 import pandas as pd
 
 from src.config import CURRENT_SEASON, DB_PATH, ROOT
 from src.optimizer.next_gameweek import AVAILABLE, predict_next_gameweek
-from src.optimizer.squad import POSITION_NAMES, load_club_names, one_row_per_player, pick_squad
+from src.optimizer.squad import (
+    POSITION_NAMES,
+    load_club_names,
+    one_row_per_player,
+    pick_squad,
+)
 
 DATA_DIR = ROOT / "dashboard" / "data"
 

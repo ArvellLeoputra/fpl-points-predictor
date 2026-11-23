@@ -3,10 +3,10 @@ Two-part prediction: P(player plays) x expected points if he plays
 """
 
 from src.modeling.evaluate import (
-    mean_absolute_error,
-    root_mean_square_error,
     by_group,
+    mean_absolute_error,
     print_results,
+    root_mean_square_error,
 )
 from src.modeling.features import (
     load_dataset,

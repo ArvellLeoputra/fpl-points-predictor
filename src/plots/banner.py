@@ -36,7 +36,7 @@ def main():
         ax.add_patch(Rectangle((i * width / stripes, 0), width / stripes, height, color=color, zorder=0))
 
     # pitch lines: outline, halfway line, centre circle, the right box
-    line = dict(fill=False, edgecolor="white", linewidth=1.6, alpha=0.55, zorder=1)
+    line = {"fill": False, "edgecolor": "white", "linewidth": 1.6, "alpha": 0.55, "zorder": 1}
     middle = height / 2
     ax.add_patch(Rectangle((0.25, 0.2), width - 0.5, height - 0.4, **line))
     ax.plot([width / 2, width / 2], [0.2, height - 0.2], color="white", linewidth=1.6, alpha=0.55, zorder=1)

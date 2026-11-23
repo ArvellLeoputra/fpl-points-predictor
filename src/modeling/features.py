@@ -128,8 +128,8 @@ def main():
     train, test = split_train_test(df)
     print(f"Train: {len(train)} rows, test: {len(test)} rows")
 
-    X_train, y_train = make_xy(train)
-    X_test, y_test = make_xy(test)
+    X_train, _ = make_xy(train)
+    X_test, _ = make_xy(test)
     print(X_train.shape, X_test.shape)
 
 

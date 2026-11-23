@@ -89,8 +89,8 @@ def main():
         top.annotate(f" {label}  {ends[key]:,.0f} ", (last_round, ends[key]),
                      xytext=(last_round + 1.0, label_y[key]), textcoords="data", va="center",
                      color="white", fontproperties=BOLD_FONT, fontsize=11,
-                     bbox=dict(boxstyle="round,pad=0.35,rounding_size=0.6", facecolor=color, edgecolor="none"),
-                     arrowprops=dict(arrowstyle="-", color=color, lw=1, shrinkA=0, shrinkB=3),
+                     bbox={"boxstyle": "round,pad=0.35,rounding_size=0.6", "facecolor": color, "edgecolor": "none"},
+                     arrowprops={"arrowstyle": "-", "color": color, "lw": 1, "shrinkA": 0, "shrinkB": 3},
                      annotation_clip=False)
     top.set_ylim(0, high)
     top.set_title("Total points", loc="left", fontproperties=BOLD_FONT, fontsize=12, color=AXIS_GREY, pad=8)

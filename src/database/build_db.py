@@ -2,10 +2,11 @@
 Build the SQLite database from sql/schema.sql and the CSV files in data/raw/.
 """
 
-import pandas as pd
 import sqlite3
 
-from src.config import CURRENT_SEASON, PAST_SEASONS, ROOT, DB_PATH
+import pandas as pd
+
+from src.config import CURRENT_SEASON, DB_PATH, PAST_SEASONS, ROOT
 
 SCHEMA_PATH = ROOT / "sql" / "schema.sql"
 RAW_DIR = ROOT / "data" / "raw"
