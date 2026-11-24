@@ -92,7 +92,7 @@
     {
       "parameters": {
         "operation": "write",
-        "fileName": "=/home/YOURNAME/.n8n-files/fpl_status_{{ $now.toFormat('yyyy-MM-dd') }}.csv",
+        "fileName": "=/home/arvellleo/.n8n-files/fpl_status_{{ $now.toFormat('yyyy-MM-dd') }}.csv",
         "options": {}
       },
       "type": "n8n-nodes-base.readWriteFile",
@@ -103,6 +103,26 @@
       ],
       "id": "c1457171-5a60-4708-b2e3-4454c6032ecf",
       "name": "Save to disk"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        320
+      ],
+      "id": "2963a6cd-8749-4ce6-b6e8-e90600658270",
+      "name": "Groq Model",
+      "credentials": {
+        "groqApi": {
+          "id": "I6g3XYTG6Fzs7tcu",
+          "name": "Groq account"
+        }
+      }
     },
     {
       "parameters": {
@@ -136,7 +156,7 @@
         80
       ],
       "id": "04cd6334-2a88-47f3-9ce3-fd0a21b5cd5c",
-      "name": "Filter"
+      "name": "Has news"
     },
     {
       "parameters": {
@@ -154,7 +174,7 @@
             },
             {
               "name": "expected_return",
-              "description": "The expected return date as YYYY-MM-DD, if the text gives one. Leave empty if there is no date. If the text says Expected back followed by a day and month, always fill this field, in the next future year."
+              "description": "The expected return date as YYYY-MM-DD, if the text gives one. Leave empty if there is no date. If the text says Expected back followed by a day and month, always fill this field. The season runs from August 2026 to May 2027, so a date from August to December is in 2026 and a date from January to May is in 2027. Do not move a date to the next year just because it has already passed."
             }
           ]
         },
@@ -173,30 +193,10 @@
         176
       ],
       "id": "9366ace8-0765-42be-8b54-0d6bd585bdb1",
-      "name": "Information Extractor",
+      "name": "Read news",
       "retryOnFail": true,
       "waitBetweenTries": 5000,
       "onError": "continueRegularOutput"
-    },
-    {
-      "parameters": {
-        "model": "openai/gpt-oss-20b",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
-      "typeVersion": 1,
-      "position": [
-        1088,
-        320
-      ],
-      "id": "2963a6cd-8749-4ce6-b6e8-e90600658270",
-      "name": "Groq Chat Model",
-      "credentials": {
-        "groqApi": {
-          "id": "I6g3XYTG6Fzs7tcu",
-          "name": "Groq account"
-        }
-      }
     },
     {
       "parameters": {
@@ -211,7 +211,7 @@
         96
       ],
       "id": "dfc0e8c7-da06-4296-9516-6b604e10a90e",
-      "name": "Merge"
+      "name": "Pair with result"
     },
     {
       "parameters": {
@@ -249,7 +249,7 @@
         96
       ],
       "id": "da3f9463-e275-48f4-a661-7293ab2abbe2",
-      "name": "Edit Fields"
+      "name": "Add AI columns"
     },
     {
       "parameters": {
@@ -265,7 +265,7 @@
         16
       ],
       "id": "b80cd69c-4628-42bd-974b-d2b8e1072b68",
-      "name": "Merge1"
+      "name": "Add to all players"
     }
   ],
   "pinData": {},
@@ -307,12 +307,12 @@
       "main": [
         [
           {
-            "node": "Filter",
+            "node": "Has news",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Merge1",
+            "node": "Add to all players",
             "type": "main",
             "index": 0
           }
@@ -330,67 +330,67 @@
         ]
       ]
     },
-    "Filter": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Information Extractor",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Groq Chat Model": {
+    "Groq Model": {
       "ai_languageModel": [
         [
           {
-            "node": "Information Extractor",
+            "node": "Read news",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "Information Extractor": {
+    "Has news": {
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Pair with result",
             "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
+            "index": 0
+          },
           {
-            "node": "Edit Fields",
+            "node": "Read news",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields": {
+    "Read news": {
       "main": [
         [
           {
-            "node": "Merge1",
+            "node": "Pair with result",
             "type": "main",
             "index": 1
           }
         ]
       ]
     },
-    "Merge1": {
+    "Pair with result": {
+      "main": [
+        [
+          {
+            "node": "Add AI columns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add AI columns": {
+      "main": [
+        [
+          {
+            "node": "Add to all players",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Add to all players": {
       "main": [
         [
           {
@@ -411,7 +411,7 @@
     "timezone": "Europe/Berlin",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "ddb580d8-739f-4222-a3fa-a1f4bba4ea27",
+  "versionId": "249aec3d-0106-4b1b-aa17-ff19f7f7b794",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "11ac47a8e688e7dce098ea83c9d6aa0b0995540654be05e7c2520468cecb6b8d"

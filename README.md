@@ -21,6 +21,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Dashboard](#dashboard)
 - [Results](#results)
 - [How it works](#how-it-works)
 - [Example squad](#example-squad)
@@ -36,11 +37,23 @@
 
 **The result.** In a backtest on the 2025-26 season, squads picked with the model scored 18% more points than squads picked by recent form, and 8% more than squads of the most-owned players (a smaller gain that is too close to call after one season).
 
-**Try it.** The [live dashboard](https://fpl-points-predictor.streamlit.app/) shows the predicted points and the best squad for the next gameweek, updated automatically twice a week.
-
 <p align="center">
   <img src="docs/backtest.png" alt="Backtest on the 2025-26 season" width="760">
 </p>
+
+## Dashboard
+
+<p align="center">
+  <img src="docs/dashboard.png" alt="FPL Points Predictor dashboard" width="900">
+</p>
+
+The [live dashboard](https://fpl-points-predictor.streamlit.app/) shows the model's picks for the next gameweek:
+
+- **Best squad:** the optimized 15 players on a pitch, with the captain, and a switch to show predicted points, the next fixture or ownership on each card.
+- **All players:** every available player's prediction, with search and filters for position and price.
+- **Backtest:** how the model's squads did over the 2025-26 season, compared with picking by form and with the most-owned squad.
+
+A GitHub Actions workflow downloads the latest FPL data, rebuilds the database and refreshes the dashboard every Tuesday and Friday.
 
 ## Results
 
@@ -208,7 +221,6 @@ In a hand check of 20 random rows, 19 were fully correct. The one error was a wr
 - Use the collected daily injury data as features in the "does he play?" model
 - Track the real points of each predicted squad during the season
 - Backtest from gameweek 2, with a way to handle the thin form in the first weeks
-- Weekly refresh with GitHub Actions
 - More seasons and model tuning
 
 <p align="right"><a href="#top">Back to top</a></p>

@@ -92,7 +92,6 @@ squad_points = starters["predicted_points"].sum() + captain["predicted_points"]
 # Sidebar
 with st.sidebar:
     st.title("FPL Points Predictor")
-    st.caption(f"Predictions for the next gameweek, based on FPL data from {updated}")
     st.markdown(
         "A model predicts every player's points for the next gameweek. "
         "An optimizer then picks the best 15-player squad within the £100m budget."
@@ -101,7 +100,7 @@ with st.sidebar:
 
 # Header and key numbers
 st.header(f"Gameweek {round_number}")
-st.caption("Predictions for the next gameweek, based on the latest FPL data")
+st.caption(f"Predictions for the next gameweek, based on FPL data from {updated}")
 
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Squad predicted points", f"{squad_points:.1f}", border=True)
