@@ -155,7 +155,14 @@ python -m src.database.build_db              # builds data/fpl.db
 python -m src.optimizer.next_gameweek
 ```
 
-After each gameweek, run step 2 (without the first line) and step 3 again. The database and the raw data are not stored in this repository.
+**4. Open the dashboard**
+
+```bash
+python -m dashboard.export       # saves the predictions and the squad for the dashboard
+streamlit run dashboard/app.py   # opens the dashboard in your browser
+```
+
+After each gameweek, run step 2 (without the first line), step 3 and step 4 again. The database and the raw data are not stored in this repository. The live dashboard is updated automatically twice a week by a GitHub Actions workflow.
 
 <details>
 <summary>All commands</summary>
@@ -183,6 +190,10 @@ python -m src.plots.backtest_chart                        # backtest chart
 python -m src.plots.banner                                # banner
 python -m src.plots.pipeline                              # steps picture
 python -m src.plots.terminal                              # example squad
+
+# Dashboard
+python -m dashboard.export                                # data for the dashboard
+streamlit run dashboard/app.py                            # open the dashboard locally
 ```
 
 </details>
